@@ -58,14 +58,17 @@ class _EmailLoginScreenState extends State<EmailLoginApp> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
+      final message = result.auth.message;
+
       if (result.ok) {
-        if (result.token != null && result.token!.isNotEmpty) {
-          await _storage.write(key: 'access_token', value: result.token);
+        final accessToken = result.auth.accessToken;
+        if (accessToken.isNotEmpty) {
+          await _storage.write(key: 'access_token', value: accessToken);
         }
         Navigator.pushReplacementNamed(context, '/myapp');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result.message)),
+          SnackBar(content: Text(message)),
         );
       }
     } catch (e) {

@@ -65,7 +65,7 @@ class _SpotifyShellState extends State<SpotifyShell> {
                               icon: Icons.music_note,
                               title: 'Danh sách phát',
                               subtitle:
-                              'Tạo danh sách phát gồm các bài hát hoặc tập podcast',
+                                  'Tạo danh sách phát gồm các bài hát hoặc tập podcast',
                             ),
                             SizedBox(height: 8),
                             _OptionTile(
@@ -78,7 +78,7 @@ class _SpotifyShellState extends State<SpotifyShell> {
                               icon: Icons.all_inclusive,
                               title: 'Giai điệu chung',
                               subtitle:
-                              'Tạo danh sách phát tổng hợp gu nhạc của bạn bè',
+                                  'Tạo danh sách phát tổng hợp gu nhạc của bạn bè',
                             ),
                           ],
                         ),
@@ -87,22 +87,21 @@ class _SpotifyShellState extends State<SpotifyShell> {
                   ),
                 ),
               ),
-               // Positioned(
-               //   right: 16,
-               //   bottom: 0,
-               //   child: FloatingActionButton.small(
-               //     backgroundColor: const Color(0xFF2B2B2B),
-               //     onPressed: () => Navigator.of(context).pop(),
-               //    child: const Icon(Icons.close),
-               //   ),
-               // ),
+              // Positioned(
+              //   right: 16,
+              //   bottom: 0,
+              //   child: FloatingActionButton.small(
+              //     backgroundColor: const Color(0xFF2B2B2B),
+              //     onPressed: () => Navigator.of(context).pop(),
+              //    child: const Icon(Icons.close),
+              //   ),
+              // ),
             ],
           ),
         );
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -142,11 +141,13 @@ class _SpotifyShellState extends State<SpotifyShell> {
                           children: List.generate(filters.length, (i) {
                             final selected = filterIndex == i;
                             return GestureDetector(
-                                onTap: () => setState(() => filterIndex = i),
+                              onTap: () => setState(() => filterIndex = i),
                               child: Container(
                                 margin: const EdgeInsets.only(right: 10),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 8),
+                                  horizontal: 20,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
                                   color: selected
                                       ? Colors.greenAccent
@@ -173,10 +174,7 @@ class _SpotifyShellState extends State<SpotifyShell> {
             ),
             const SizedBox(height: 4),
             Expanded(
-              child: IndexedStack(
-                index: tab,
-                children: pages,
-              ),
+              child: IndexedStack(index: tab, children: pages),
             ),
           ],
         ),
@@ -191,7 +189,6 @@ class _SpotifyShellState extends State<SpotifyShell> {
           } else {
             setState(() => tab = i);
           }
-
         },
         selectedItemColor: Colors.white,
         unselectedItemColor: const Color(0xFF8E8E93),
@@ -203,10 +200,7 @@ class _SpotifyShellState extends State<SpotifyShell> {
             activeIcon: Icon(Icons.home_filled),
             label: 'Trang chủ',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Tìm kiếm',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Tìm kiếm'),
           BottomNavigationBarItem(
             icon: Icon(Icons.library_music_outlined),
             activeIcon: Icon(Icons.library_music),
@@ -261,15 +255,22 @@ class _OptionTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700)),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text(subtitle,
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 13)),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -286,8 +287,10 @@ class _HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child: Text('Trang chủ',
-          style: TextStyle(color: Colors.white, fontSize: 22)),
+      child: Text(
+        'Trang chủ',
+        style: TextStyle(color: Colors.white, fontSize: 22),
+      ),
     );
   }
 }
@@ -297,8 +300,10 @@ class _SearchPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child:
-      Text('Tìm kiếm', style: TextStyle(color: Colors.white, fontSize: 22)),
+      child: Text(
+        'Tìm kiếm',
+        style: TextStyle(color: Colors.white, fontSize: 22),
+      ),
     );
   }
 }
@@ -308,8 +313,10 @@ class _LibraryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child:
-      Text('Thư viện', style: TextStyle(color: Colors.white, fontSize: 22)),
+      child: Text(
+        'Thư viện',
+        style: TextStyle(color: Colors.white, fontSize: 22),
+      ),
     );
   }
 }
@@ -319,8 +326,10 @@ class _PremiumPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child:
-      Text('Premium', style: TextStyle(color: Colors.white, fontSize: 22)),
+      child: Text(
+        'Premium',
+        style: TextStyle(color: Colors.white, fontSize: 22),
+      ),
     );
   }
 }

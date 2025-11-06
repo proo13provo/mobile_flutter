@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import '../config/api_constants.dart';
+import '../models/auth_response.dart';
+import '../models/user_response.dart';
 
 class AuthService {
   final Dio _dio;
@@ -21,7 +23,7 @@ class AuthService {
     _dio.interceptors.add(CookieManager(CookieJar()));
   }
 
-  Future<({bool ok, String message, String? token})> login({
+  Future<({bool ok, AuthResponse auth, UserResponse? user})> login({
     required String email,
     required String password,
   }) async {
@@ -31,34 +33,28 @@ class AuthService {
         data: {'email': email, 'password': password},
       );
 
-      if (resp.statusCode == 200) {
-        final data = _asMap(resp.data);
-        return (
-          ok: true,
-          message: data['message']?.toString() ?? 'Login OK',
-          token: data['accessToken'] as String?,
-        );
-      } else {
-        final data = _asMap(resp.data);
-        return (
-          ok: false,
-          message: data['message']?.toString() ?? 'Login failed',
-          token: null,
-        );
-      }
+      final body = _asMap(resp.data);
+      final auth = _buildAuthResponse(body, fallbackMessage: 'Login OK');
+      final user = _buildUserResponse(body['user']);
+      final ok = resp.statusCode == 200;
+
+      return (ok: ok, auth: auth, user: ok ? user : null);
     } on DioException catch (e) {
-      final data = _asMap(e.response?.data);
+      final auth = _buildAuthResponse(
+        e.response?.data,
+        fallbackMessage: 'Login failed',
+      );
+      return (ok: false, auth: auth, user: null);
+    } catch (_) {
       return (
         ok: false,
-        message: data['message']?.toString() ?? 'Login failed',
-        token: null,
+        auth: const AuthResponse(accessToken: '', message: 'Login failed'),
+        user: null,
       );
-    } catch (_) {
-      return (ok: false, message: 'Login failed', token: null);
     }
   }
 
-  Future<({bool ok, String message})> register({
+  Future<({bool ok, AuthResponse auth})> register({
     required String email,
     required String password,
   }) async {
@@ -68,28 +64,28 @@ class AuthService {
         data: {'email': email, 'password': password},
       );
 
-      if (resp.statusCode == 200) {
-        final data = _asMap(resp.data);
-        return (ok: true, message: data['message']?.toString() ?? 'Sign up OK');
-      } else {
-        final data = _asMap(resp.data);
-        return (
-          ok: false,
-          message: data['message']?.toString() ?? 'Sign up failed',
-        );
-      }
+      final auth = _buildAuthResponse(
+        resp.data,
+        fallbackMessage: 'Sign up OK',
+      );
+      final ok = resp.statusCode == 200;
+
+      return (ok: ok, auth: auth);
     } on DioException catch (e) {
-      final data = _asMap(e.response?.data);
+      final auth = _buildAuthResponse(
+        e.response?.data,
+        fallbackMessage: 'Sign up failed',
+      );
+      return (ok: false, auth: auth);
+    } catch (_) {
       return (
         ok: false,
-        message: data['message']?.toString() ?? 'Sign up failed',
+        auth: const AuthResponse(accessToken: '', message: 'Sign up failed'),
       );
-    } catch (_) {
-      return (ok: false, message: 'Sign up failed');
     }
   }
 
-  Future<({bool ok, String message, String? accessToken})> verify({
+  Future<({bool ok, AuthResponse auth})> verify({
     required String email,
     required String verificationCode,
   }) async {
@@ -99,34 +95,28 @@ class AuthService {
         data: {'email': email, 'verificationCode': verificationCode},
       );
 
-      if (resp.statusCode == 200) {
-        final data = _asMap(resp.data);
-        return (
-          ok: true,
-          message: data['message']?.toString() ?? 'verify OK',
-          accessToken: data['accessToken']?.toString(),
-        );
-      } else {
-        final data = _asMap(resp.data);
-        return (
-          ok: false,
-          message: data['message']?.toString() ?? 'verify failed',
-          accessToken: null,
-        );
-      }
+      final auth = _buildAuthResponse(
+        resp.data,
+        fallbackMessage: 'verify OK',
+      );
+      final ok = resp.statusCode == 200;
+
+      return (ok: ok, auth: auth);
     } on DioException catch (e) {
-      final data = _asMap(e.response?.data);
+      final auth = _buildAuthResponse(
+        e.response?.data,
+        fallbackMessage: 'verify failed',
+      );
+      return (ok: false, auth: auth);
+    } catch (_) {
       return (
         ok: false,
-        message: data['message']?.toString() ?? 'verify failed',
-        accessToken: null,
+        auth: const AuthResponse(accessToken: '', message: 'verify failed'),
       );
-    } catch (_) {
-      return (ok: false, message: 'verify failed', accessToken: null);
     }
   }
 
-  Future<({bool ok, String message})> logout({String? authorization}) async {
+  Future<({bool ok, AuthResponse auth})> logout({String? authorization}) async {
     try {
       final headers = <String, dynamic>{};
       if (authorization != null && authorization.isNotEmpty) {
@@ -138,59 +128,54 @@ class AuthService {
         options: Options(headers: headers.isEmpty ? null : headers),
       );
 
-      final data = _asMap(resp.data);
-      if (resp.statusCode == 200) {
-        return (ok: true, message: data['message']?.toString() ?? 'Logout OK');
-      } else {
-        return (
-          ok: false,
-          message: data['message']?.toString() ?? 'Logout failed',
-        );
-      }
+      final auth = _buildAuthResponse(
+        resp.data,
+        fallbackMessage: 'Logout OK',
+      );
+      final ok = resp.statusCode == 200;
+
+      return (ok: ok, auth: auth);
     } on DioException catch (e) {
-      final data = _asMap(e.response?.data);
+      final auth = _buildAuthResponse(
+        e.response?.data,
+        fallbackMessage: 'Logout failed',
+      );
+      return (ok: false, auth: auth);
+    } catch (_) {
       return (
         ok: false,
-        message: data['message']?.toString() ?? 'Logout failed',
+        auth: const AuthResponse(accessToken: '', message: 'Logout failed'),
       );
-    } catch (_) {
-      return (ok: false, message: 'Logout failed');
     }
   }
 
-  Future<({bool ok, String message, String? accessToken})>
-  refreshAccessToken() async {
+  Future<({bool ok, AuthResponse auth})> refreshAccessToken() async {
     try {
       // Backend reads refresh token from cookie "refreshToken".
       final resp = await _dio.get('/api/auth/access-token');
-      final data = _asMap(resp.data);
 
-      if (resp.statusCode == 200) {
-        return (
-          ok: true,
-          message: data['message']?.toString() ?? 'Refreshed',
-          accessToken: data['accessToken']?.toString(),
-        );
-      } else {
-        return (
-          ok: false,
-          message: data['message']?.toString() ?? 'Refresh failed',
-          accessToken: null,
-        );
-      }
+      final auth = _buildAuthResponse(
+        resp.data,
+        fallbackMessage: 'Refreshed',
+      );
+      final ok = resp.statusCode == 200;
+
+      return (ok: ok, auth: auth);
     } on DioException catch (e) {
-      final data = _asMap(e.response?.data);
+      final auth = _buildAuthResponse(
+        e.response?.data,
+        fallbackMessage: 'Refresh failed',
+      );
+      return (ok: false, auth: auth);
+    } catch (_) {
       return (
         ok: false,
-        message: data['message']?.toString() ?? 'Refresh failed',
-        accessToken: null,
+        auth: const AuthResponse(accessToken: '', message: 'Refresh failed'),
       );
-    } catch (_) {
-      return (ok: false, message: 'Refresh failed', accessToken: null);
     }
   }
 
-  Future<({bool ok, String message, String? accessToken})> loginWithGoogle({
+  Future<({bool ok, AuthResponse auth})> loginWithGoogle({
     required String code,
   }) async {
     try {
@@ -200,29 +185,24 @@ class AuthService {
         options: Options(contentType: 'text/plain'),
       );
 
-      final data = _asMap(resp.data);
-      if (resp.statusCode == 200) {
-        return (
-          ok: true,
-          message: data['message']?.toString() ?? 'Login OK',
-          accessToken: data['accessToken']?.toString(),
-        );
-      } else {
-        return (
-          ok: false,
-          message: data['message']?.toString() ?? 'Login failed',
-          accessToken: null,
-        );
-      }
+      final auth = _buildAuthResponse(
+        resp.data,
+        fallbackMessage: 'Login OK',
+      );
+      final ok = resp.statusCode == 200;
+
+      return (ok: ok, auth: auth);
     } on DioException catch (e) {
-      final data = _asMap(e.response?.data);
+      final auth = _buildAuthResponse(
+        e.response?.data,
+        fallbackMessage: 'Login failed',
+      );
+      return (ok: false, auth: auth);
+    } catch (_) {
       return (
         ok: false,
-        message: data['message']?.toString() ?? 'Login failed',
-        accessToken: null,
+        auth: const AuthResponse(accessToken: '', message: 'Login failed'),
       );
-    } catch (_) {
-      return (ok: false, message: 'Login failed', accessToken: null);
     }
   }
 
@@ -230,5 +210,27 @@ class AuthService {
     if (data is Map<String, dynamic>) return data;
     if (data is Map) return Map<String, dynamic>.from(data);
     return <String, dynamic>{};
+  }
+
+  AuthResponse _buildAuthResponse(
+    dynamic data, {
+    required String fallbackMessage,
+  }) {
+    final map = _asMap(data);
+    final auth = AuthResponse.fromJson(map);
+    if (auth.message.isNotEmpty) {
+      return auth;
+    }
+    return AuthResponse(accessToken: auth.accessToken, message: fallbackMessage);
+  }
+
+  UserResponse? _buildUserResponse(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return UserResponse.fromJson(data);
+    }
+    if (data is Map) {
+      return UserResponse.fromJson(Map<String, dynamic>.from(data));
+    }
+    return null;
   }
 }

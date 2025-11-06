@@ -66,10 +66,12 @@ class _SignUpEmailScreenState extends State<SignUpEmailApp> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
+      final message = result.auth.message;
+
       if (result.ok) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(result.message)));
+        ).showSnackBar(SnackBar(content: Text(message)));
         Navigator.pushReplacementNamed(
           context,
           '/verify',
@@ -78,7 +80,7 @@ class _SignUpEmailScreenState extends State<SignUpEmailApp> {
       } else {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(result.message)));
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
     } catch (e) {
       if (!mounted) return;

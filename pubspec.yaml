@@ -23,6 +23,34 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.1
+
 
 flutter:
   uses-material-design: true
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: lib\icon\Spotify_icon.svg.png
+
+flutter_native_splash:
+  android: true
+  ios: true
+  web: false
+
+  color: "#191414"         # Nền tối giống Spotify
+  image: lib/icon/spotify.png  # Logo ở giữa
+  fullscreen: true
+
+  color_dark: "#000000"    # Nền cho dark mode
+  image_dark: lib/icon/spotify.png
+
+  android_12:
+    color: "#191414"
+    image: lib/icon/spotify.png
+    icon_background_color: "#191414"
+    color_dark: "#000000"
+    image_dark: lib/icon/spotify.png
+    icon_background_color_dark: "#000000"

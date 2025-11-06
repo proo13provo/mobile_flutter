@@ -95,15 +95,18 @@ class _VerifyScreenState extends State<VerifyScreen> {
 
       if (!mounted) return;
 
+      final message = result.auth.message;
+
       if (result.ok) {
-        if (result.accessToken != null && result.accessToken!.isNotEmpty) {
-          await _storage.write(key: 'accessToken', value: result.accessToken);
+        final accessToken = result.auth.accessToken;
+        if (accessToken.isNotEmpty) {
+          await _storage.write(key: 'accessToken', value: accessToken);
         }
         Navigator.pushReplacementNamed(context, '/login');
       } else {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(result.message)));
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
     } catch (e) {
       if (!mounted) return;
