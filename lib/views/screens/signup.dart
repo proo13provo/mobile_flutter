@@ -2,9 +2,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:spotife/service/auth_service.dart';
+import 'package:spotife/service/api/auth_service.dart';
 
-import 'main.dart';
+import '../../main.dart';
 
 class SignUpEmailApp extends StatefulWidget {
   const SignUpEmailApp({super.key});

@@ -2,10 +2,9 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../main.dart';
-import '../service/auth_service.dart';
-// import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../main.dart';
+import 'package:spotife/service/api/auth_service.dart';
+import 'package:spotife/service/secure_storage_service.dart';
 
 class EmailLoginApp extends StatefulWidget {
   const EmailLoginApp({super.key});
@@ -13,11 +12,12 @@ class EmailLoginApp extends StatefulWidget {
   @override
   State<EmailLoginApp> createState() => _EmailLoginScreenState();
 }
+
 class _EmailLoginScreenState extends State<EmailLoginApp> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
-  final _storage = const FlutterSecureStorage();
+  final _storage = SecureStorageService();
   bool _obscure = true;
   bool _isLoading = false;
   bool _rememberMe = false;
@@ -38,7 +38,8 @@ class _EmailLoginScreenState extends State<EmailLoginApp> {
 
   String? _validatePassword(String? v) {
     if (v == null || v.isEmpty) return 'Please enter your password';
-    if (v.isEmpty) return 'Password must not be empty'; // backend của bạn cho phép "1"
+    if (v.isEmpty)
+      return 'Password must not be empty'; // backend của bạn cho phép "1"
     return null;
   }
 
@@ -63,20 +64,20 @@ class _EmailLoginScreenState extends State<EmailLoginApp> {
       if (result.ok) {
         final accessToken = result.auth.accessToken;
         if (accessToken.isNotEmpty) {
-          await _storage.write(key: 'access_token', value: accessToken);
+          await _storage.saveAccessToken(accessToken);
         }
         Navigator.pushReplacementNamed(context, '/myapp');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Có lỗi khi kết nối server: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Có lỗi khi kết nối server: $e')));
     }
   }
 
@@ -99,7 +100,10 @@ class _EmailLoginScreenState extends State<EmailLoginApp> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+          ),
           tooltip: 'Back',
           onPressed: _handleBack,
         ),
@@ -109,12 +113,19 @@ class _EmailLoginScreenState extends State<EmailLoginApp> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520),
             child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: isWide ? 32 : 20, vertical: 12),
+              padding: EdgeInsets.symmetric(
+                horizontal: isWide ? 32 : 20,
+                vertical: 12,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // Logo Spotify
-                  const FaIcon(FontAwesomeIcons.spotify, color: Color(0xFF1DB954), size: 72),
+                  const FaIcon(
+                    FontAwesomeIcons.spotify,
+                    color: Color(0xFF1DB954),
+                    size: 72,
+                  ),
                   const SizedBox(height: 12),
 
                   // Wordmark
@@ -130,7 +141,11 @@ class _EmailLoginScreenState extends State<EmailLoginApp> {
                   const SizedBox(height: 8),
                   const Text(
                     'Log in to continue.',
-                    style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   const SizedBox(height: 24),
 
@@ -165,9 +180,16 @@ class _EmailLoginScreenState extends State<EmailLoginApp> {
                             labelText: 'Password',
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
-                              onPressed: () => setState(() => _obscure = !_obscure),
-                              icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
-                              tooltip: _obscure ? 'Show password' : 'Hide password',
+                              onPressed: () =>
+                                  setState(() => _obscure = !_obscure),
+                              icon: Icon(
+                                _obscure
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              tooltip: _obscure
+                                  ? 'Show password'
+                                  : 'Hide password',
                             ),
                           ),
                         ),
@@ -178,9 +200,11 @@ class _EmailLoginScreenState extends State<EmailLoginApp> {
                           children: [
                             Checkbox(
                               value: _rememberMe,
-                              onChanged: (v) => setState(() => _rememberMe = v ?? false),
+                              onChanged: (v) =>
+                                  setState(() => _rememberMe = v ?? false),
                               fillColor: WidgetStateProperty.resolveWith(
-                                    (states) => states.contains(WidgetState.selected)
+                                (states) =>
+                                    states.contains(WidgetState.selected)
                                     ? kSpotifyGreen
                                     : Colors.white24,
                               ),
@@ -191,7 +215,9 @@ class _EmailLoginScreenState extends State<EmailLoginApp> {
                             TextButton(
                               onPressed: () {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Forgot password pressed')),
+                                  const SnackBar(
+                                    content: Text('Forgot password pressed'),
+                                  ),
                                 );
                               },
                               child: const Text('Forgot your password?'),
@@ -208,16 +234,23 @@ class _EmailLoginScreenState extends State<EmailLoginApp> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: kSpotifyGreen,
                               foregroundColor: Colors.black,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                              textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 16,
+                              ),
                             ),
                             onPressed: _isLoading ? null : _submit,
                             child: _isLoading
                                 ? const SizedBox(
-                              height: 22,
-                              width: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2.6),
-                            )
+                                    height: 22,
+                                    width: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.6,
+                                    ),
+                                  )
                                 : const Text('Log in'),
                           ),
                         ),
@@ -226,29 +259,47 @@ class _EmailLoginScreenState extends State<EmailLoginApp> {
                         // Divider
                         Row(
                           children: [
-                            const Expanded(child: Divider(color: Colors.white24)),
+                            const Expanded(
+                              child: Divider(color: Colors.white24),
+                            ),
                             const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 10),
-                              child: Text('or', style: TextStyle(color: Colors.white70)),
+                              child: Text(
+                                'or',
+                                style: TextStyle(color: Colors.white70),
+                              ),
                             ),
-                            const Expanded(child: Divider(color: Colors.white24)),
+                            const Expanded(
+                              child: Divider(color: Colors.white24),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 16),
 
                         // Sign up outline
-                        RichText(text: TextSpan(
-                          style: const TextStyle(color: Colors.white70, fontSize: 16),
-                          children: [
-                            const TextSpan(text: "you don't have an account? "),
-                            TextSpan(
-                              text: 'Sign Up',
-                              style: const TextStyle(color: kSpotifyGreen),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () => Navigator.pushReplacementNamed(context, '/signup'),
+                        RichText(
+                          text: TextSpan(
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 16,
                             ),
-                          ],
-                        )),
+                            children: [
+                              const TextSpan(
+                                text: "you don't have an account? ",
+                              ),
+                              TextSpan(
+                                text: 'Sign Up',
+                                style: const TextStyle(color: kSpotifyGreen),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () =>
+                                      Navigator.pushReplacementNamed(
+                                        context,
+                                        '/signup',
+                                      ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),

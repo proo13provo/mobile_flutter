@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:spotife/service/auth_service.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:spotife/service/api/auth_service.dart';
+import 'package:spotife/service/secure_storage_service.dart';
 
 const kSpotifyGreen = Color(0xFF1DB954);
 const kBg = Color(0xFF121212);
@@ -66,7 +66,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
   bool get _canVerify =>
       _code.length == 6 && !_code.contains(RegExp(r'[^0-9]'));
 
-  final _storage = const FlutterSecureStorage();
+  final _storage = SecureStorageService();
   Future<void> _verify() async {
     FocusScope.of(context).unfocus();
     if (!_canVerify || _isVerifying) return;
@@ -100,7 +100,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
       if (result.ok) {
         final accessToken = result.auth.accessToken;
         if (accessToken.isNotEmpty) {
-          await _storage.write(key: 'accessToken', value: accessToken);
+          await _storage.saveAccessToken(accessToken);
         }
         Navigator.pushReplacementNamed(context, '/login');
       } else {

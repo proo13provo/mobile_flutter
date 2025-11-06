@@ -2,15 +2,21 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:spotife/home.dart';
+import 'package:spotife/service/api/auth_service.dart';
+import 'package:spotife/views/screens/home.dart';
 
-import 'login.dart';
-import 'signup.dart';
-import 'verify.dart';
+import 'views/screens/login.dart';
+import 'views/screens/signup.dart';
+import 'views/screens/verify.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final authService = AuthService();
+  final hasSession = await authService.restoreSessionOnAppLaunch();
+
   if (kDebugMode) {}
-  runApp(const SpotifyLikeApp());
+  runApp(SpotifyLikeApp(isAuthenticated: hasSession));
 }
 
 const Color kSpotifyGreen = Color(0xFF1DB954);
@@ -18,7 +24,9 @@ const Color kBg = Color(0xFF121212);
 const Color kCard = Color(0xFF1E1E1E);
 
 class SpotifyLikeApp extends StatelessWidget {
-  const SpotifyLikeApp({super.key});
+  const SpotifyLikeApp({super.key, required this.isAuthenticated});
+
+  final bool isAuthenticated;
 
   @override
   Widget build(BuildContext context) {
@@ -39,9 +47,9 @@ class SpotifyLikeApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const LoginScreen(),
+      initialRoute: isAuthenticated ? '/myapp' : '/home',
       routes: {
-        '/home': (_) => const SpotifyLikeApp(),
+        '/home': (_) => const LoginScreen(),
         '/login': (_) => const EmailLoginApp(),
         '/signup': (_) => const SignUpEmailApp(),
         '/verify': (_) => const VerifyScreen(),

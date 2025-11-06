@@ -14,6 +14,7 @@ class SecureStorageService {
   Future<String?> getRefreshToken() => _storage.read(key: _kRefresh);
 
   Future<void> saveAccessToken(String access) => _storage.write(key: _kAccess, value: access);
+  Future<void> deleteAccessToken() => _storage.delete(key: _kAccess);
 
   Future<void> clear() async {
     await _storage.delete(key: _kAccess);
