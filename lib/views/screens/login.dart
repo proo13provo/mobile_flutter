@@ -2,18 +2,19 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../main.dart';
+import 'package:spotife/routes/app_routes.dart';
+import 'package:spotife/theme/app_colors.dart';
 import 'package:spotife/service/api/auth_service.dart';
 import 'package:spotife/service/secure_storage_service.dart';
 
-class EmailLoginApp extends StatefulWidget {
-  const EmailLoginApp({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<EmailLoginApp> createState() => _EmailLoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _EmailLoginScreenState extends State<EmailLoginApp> {
+class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
@@ -38,8 +39,8 @@ class _EmailLoginScreenState extends State<EmailLoginApp> {
 
   String? _validatePassword(String? v) {
     if (v == null || v.isEmpty) return 'Please enter your password';
-    if (v.isEmpty)
-      return 'Password must not be empty'; // backend của bạn cho phép "1"
+    // backend của bạn cho phép "1"
+    if (v.isEmpty) return 'Password must not be empty';
     return null;
   }
 
@@ -56,6 +57,8 @@ class _EmailLoginScreenState extends State<EmailLoginApp> {
         password: _passCtrl.text,
       );
 
+      if (!context.mounted) return;
+
       if (!mounted) return;
       setState(() => _isLoading = false);
 
@@ -66,7 +69,9 @@ class _EmailLoginScreenState extends State<EmailLoginApp> {
         if (accessToken.isNotEmpty) {
           await _storage.saveAccessToken(accessToken);
         }
-        Navigator.pushReplacementNamed(context, '/myapp');
+
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
       } else {
         ScaffoldMessenger.of(
           context,
@@ -85,7 +90,7 @@ class _EmailLoginScreenState extends State<EmailLoginApp> {
     if (Navigator.canPop(context)) {
       Navigator.pop(context);
     } else {
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.pushReplacementNamed(context, AppRoutes.main);
     }
   }
 
@@ -294,7 +299,7 @@ class _EmailLoginScreenState extends State<EmailLoginApp> {
                                   ..onTap = () =>
                                       Navigator.pushReplacementNamed(
                                         context,
-                                        '/signup',
+                                        AppRoutes.signup,
                                       ),
                               ),
                             ],

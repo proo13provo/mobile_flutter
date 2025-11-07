@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:spotife/routes/app_routes.dart';
 import 'package:spotife/service/api/auth_service.dart';
 import 'package:spotife/service/secure_storage_service.dart';
 
@@ -78,7 +79,6 @@ class _VerifyScreenState extends State<VerifyScreen> {
           ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
       final email = args?['email']?.toString() ?? '';
       final verificationCode = _controllers.map((c) => c.text.trim()).join();
-      ;
       final auth = AuthService();
 
       if (email.isEmpty || verificationCode.isEmpty) {
@@ -102,7 +102,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
         if (accessToken.isNotEmpty) {
           await _storage.saveAccessToken(accessToken);
         }
-        Navigator.pushReplacementNamed(context, '/login');
+        Navigator.pushReplacementNamed(context, AppRoutes.login);
       } else {
         ScaffoldMessenger.of(
           context,
@@ -203,7 +203,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
             if (Navigator.canPop(context)) {
               Navigator.pop(context);
             } else {
-              Navigator.pushReplacementNamed(context, '/home');
+              Navigator.pushReplacementNamed(context, AppRoutes.home);
             }
           },
         ),

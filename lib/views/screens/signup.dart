@@ -2,17 +2,18 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:spotife/routes/app_routes.dart';
 import 'package:spotife/service/api/auth_service.dart';
 
-import '../../main.dart';
+import 'package:spotife/theme/app_colors.dart';
 
-class SignUpEmailApp extends StatefulWidget {
-  const SignUpEmailApp({super.key});
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
   @override
-  State<SignUpEmailApp> createState() => _SignUpEmailScreenState();
+  State<SignUpScreen> createState() => _SignUpEmailScreenState();
 }
 
-class _SignUpEmailScreenState extends State<SignUpEmailApp> {
+class _SignUpEmailScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
@@ -74,7 +75,7 @@ class _SignUpEmailScreenState extends State<SignUpEmailApp> {
         ).showSnackBar(SnackBar(content: Text(message)));
         Navigator.pushReplacementNamed(
           context,
-          '/verify',
+          AppRoutes.verify,
           arguments: {'email': _emailCtrl.text.trim()},
         );
       } else {
@@ -95,7 +96,7 @@ class _SignUpEmailScreenState extends State<SignUpEmailApp> {
     if (Navigator.canPop(context)) {
       Navigator.pop(context);
     } else {
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.pushReplacementNamed(context, AppRoutes.main);
     }
   }
 
@@ -284,7 +285,7 @@ class _SignUpEmailScreenState extends State<SignUpEmailApp> {
                                   ..onTap = () =>
                                       Navigator.pushReplacementNamed(
                                         context,
-                                        '/login',
+                                        AppRoutes.login,
                                       ),
                               ),
                             ],
