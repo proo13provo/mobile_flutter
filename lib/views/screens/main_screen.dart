@@ -46,10 +46,7 @@ class MainScreen extends StatelessWidget {
                     text: 'Sign up free',
                     onPressed: () {
                       // TODO: push tới flow đăng ký
-                      Navigator.pushReplacementNamed(
-                        context,
-                        AppRoutes.signup,
-                      );
+                      Navigator.pushReplacementNamed(context, AppRoutes.signup);
                     },
                   ),
                   const SizedBox(height: 12),
@@ -99,11 +96,7 @@ class MainScreen extends StatelessWidget {
                   _OutlineButton(
                     text: 'Log in',
                     onPressed: () {
-                      // TODO: chuyển tới trang nhập email/password
-                      Navigator.pushReplacementNamed(
-                        context,
-                        AppRoutes.login,
-                      );
+                      Navigator.pushReplacementNamed(context, AppRoutes.login);
                     },
                   ),
 
@@ -167,10 +160,7 @@ class _PrimaryButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 16,
-          ),
+          textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
         ),
         onPressed: onPressed,
         child: Text(text),
@@ -291,7 +281,7 @@ class _LegalText extends StatelessWidget {
     return Text.rich(
       TextSpan(
         style: TextStyle(
-          color: Colors.white.withOpacity(0.65),
+          color: Colors.white.withValues(alpha: 0.65),
           fontSize: 12.5,
           height: 1.4,
         ),

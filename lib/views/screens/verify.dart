@@ -44,8 +44,12 @@ class _VerifyScreenState extends State<VerifyScreen> {
 
   @override
   void dispose() {
-    for (final c in _controllers) c.dispose();
-    for (final f in _focusNodes) f.dispose();
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final f in _focusNodes) {
+      f.dispose();
+    }
     _timer?.cancel();
     super.dispose();
   }
@@ -102,6 +106,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
         if (accessToken.isNotEmpty) {
           await _storage.saveAccessToken(accessToken);
         }
+        if (!mounted) return;
         Navigator.pushReplacementNamed(context, AppRoutes.login);
       } else {
         ScaffoldMessenger.of(
