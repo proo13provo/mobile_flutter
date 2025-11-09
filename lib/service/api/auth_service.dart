@@ -188,12 +188,14 @@ class AuthService {
   Future<({bool ok, AuthResponse auth})> loginWithGoogle({
     required String code,
   }) async {
+    final encodedCode = Uri.encodeComponent(code);
+
     try {
       final resp = await _apiClient.post(
         '/api/auth/google-callback',
-        data: code,
+        data: encodedCode,
         options: Options(
-          contentType: 'text/plain',
+          contentType: Headers.textPlainContentType,
           extra: const {'skipAuth': true},
         ),
       );

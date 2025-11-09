@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "307604724969",
+    "project_id": "spotify-f3f52",
+    "storage_bucket": "spotify-f3f52.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:307604724969:android:ef24bae1c3f154e654e478",
+        "android_client_info": {
+          "package_name": "com.example.spotife"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "307604724969-ag6lj1qmt646eomsc9c2qnts0rarqj02.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.spotife",
+            "certificate_hash": "eaab94f1ab1b8895128c4ea3edc485ad615fade6"
+          }
+        },
+        {
+          "client_id": "307604724969-6aca63if5qssvgsbuhegl53tm4jojhrf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0fH6lOaBtVpVOsSorF0n7bOZQGutdMy8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "307604724969-6aca63if5qssvgsbuhegl53tm4jojhrf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
