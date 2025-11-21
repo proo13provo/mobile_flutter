@@ -15,19 +15,34 @@ class AppRoutes {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case login:
-        return MaterialPageRoute(builder: (_) => const LoginScreen());
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const LoginScreen(),
+        );
 
       case main:
-        return MaterialPageRoute(builder: (_) => const MainScreen());
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const MainScreen(),
+        );
 
       case home:
-        return MaterialPageRoute(builder: (_) => const SpotifyScreen());
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const SpotifyScreen(),
+        );
 
       case verify:
-        return MaterialPageRoute(builder: (_) => const VerifyScreen());
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const VerifyScreen(),
+        );
 
       case signup:
-        return MaterialPageRoute(builder: (_) => const SignUpScreen());
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const SignUpScreen(),
+        );
 
       default:
         return MaterialPageRoute(
