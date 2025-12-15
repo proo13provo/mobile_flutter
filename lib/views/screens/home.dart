@@ -648,7 +648,6 @@ class _SpotifyBottomNavigationBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
   const _SpotifyBottomNavigationBar({
-    super.key,
     required this.currentIndex,
     required this.onTap,
   });

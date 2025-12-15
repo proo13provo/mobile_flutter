@@ -107,7 +107,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
           await _storage.saveAccessToken(accessToken);
         }
         if (!mounted) return;
-        Navigator.pushReplacementNamed(context, AppRoutes.login);
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
       } else {
         ScaffoldMessenger.of(
           context,
