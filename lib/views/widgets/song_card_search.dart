@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:spotife/views/screens/songdetail_screen.dart';
+import 'package:spotife/service/player_service.dart';
 
 class SongCardSearch extends StatelessWidget {
   final String songId;
@@ -22,12 +22,8 @@ class SongCardSearch extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(10),
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SongDetailScreen(songId: songId),
-          ),
-        );
+        // Gọi service để phát nhạc toàn cục
+        PlayerService().setSong(songId);
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),

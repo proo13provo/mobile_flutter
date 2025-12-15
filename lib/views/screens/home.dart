@@ -4,16 +4,27 @@ import 'package:spotife/models/user_response.dart';
 import 'package:spotife/routes/app_routes.dart';
 import 'package:spotife/service/api/auth_service.dart';
 import 'package:spotife/service/api/api_user.dart';
+import 'package:spotife/service/player_service.dart';
 import 'package:spotife/service/secure_storage_service.dart';
 import 'package:spotife/views/screens/search_screen.dart';
+import 'package:spotife/views/screens/songdetail_screen.dart';
+
+final PlayerRouteObserver _playerRouteObserver = PlayerRouteObserver();
 
 class SpotifyScreen extends StatelessWidget {
   const SpotifyScreen({super.key});
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: SpotifyShell(),
+      navigatorObservers: [_playerRouteObserver],
+      home: const SpotifyShell(),
+      // Builder này giúp Player nằm đè lên TẤT CẢ các màn hình (kể cả SearchScreen được push)
+      builder: (context, child) {
+        return Stack(
+          children: [if (child != null) child, const _GlobalPlayerOverlay()],
+        );
+      },
     );
   }
 }
@@ -42,76 +53,9 @@ class _SpotifyShellState extends State<SpotifyShell> {
     _loadUserProfile();
   }
 
-  void _openCreateSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      isDismissible: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black54,
-      builder: (_) {
-        return Transform.translate(
-          offset: const Offset(0, -50),
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 25),
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2B2B2B),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: SafeArea(
-                      top: false,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            _OptionTile(
-                              icon: Icons.music_note,
-                              title: 'Danh sách phát',
-                              subtitle:
-                                  'Tạo danh sách phát gồm các bài hát hoặc tập podcast',
-                            ),
-                            SizedBox(height: 8),
-                            _OptionTile(
-                              icon: Icons.group,
-                              title: 'Danh sách phát cộng tác',
-                              subtitle: 'Cùng bạn bè tạo danh sách phát',
-                            ),
-                            SizedBox(height: 8),
-                            _OptionTile(
-                              icon: Icons.all_inclusive,
-                              title: 'Giai điệu chung',
-                              subtitle:
-                                  'Tạo danh sách phát tổng hợp gu nhạc của bạn bè',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // Positioned(
-              //   right: 16,
-              //   bottom: 0,
-              //   child: FloatingActionButton.small(
-              //     backgroundColor: const Color(0xFF2B2B2B),
-              //     onPressed: () => Navigator.of(context).pop(),
-              //    child: const Icon(Icons.close),
-              //   ),
-              // ),
-            ],
-          ),
-        );
-      },
-    );
+  void _toggleCreateSheet() {
+    final service = PlayerService();
+    service.setModalOpen(!service.isModalOpen);
   }
 
   void _openQuickMenuPanel(BuildContext context) {
@@ -221,6 +165,9 @@ class _SpotifyShellState extends State<SpotifyShell> {
   @override
   Widget build(BuildContext context) {
     final pages = _buildPages();
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final navBarHeight = kBottomNavigationBarHeight + bottomPadding;
+
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onHorizontalDragStart: _handleHorizontalDragStart,
@@ -230,23 +177,116 @@ class _SpotifyShellState extends State<SpotifyShell> {
       child: Scaffold(
         backgroundColor: Colors.black,
         extendBody: true,
-        body: SafeArea(
-          child: Column(
-            children: [
-              _buildTopBar(),
-              const SizedBox(height: 4),
-              Expanded(
-                child: IndexedStack(index: tab, children: pages),
+        body: Stack(
+          children: [
+            SafeArea(
+              child: Column(
+                children: [
+                  _buildTopBar(),
+                  const SizedBox(height: 4),
+                  Expanded(
+                    child: IndexedStack(index: tab, children: pages),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            ListenableBuilder(
+              listenable: PlayerService(),
+              builder: (context, _) {
+                final isOpen = PlayerService().isModalOpen;
+                return Stack(
+                  children: [
+                    // Lớp phủ mờ (Barrier) - Bấm vào để đóng
+                    IgnorePointer(
+                      ignoring: !isOpen,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 200),
+                        opacity: isOpen ? 1.0 : 0.0,
+                        child: GestureDetector(
+                          onTap: () => PlayerService().setModalOpen(false),
+                          child: Container(color: Colors.black54),
+                        ),
+                      ),
+                    ),
+                    // Menu trượt lên từ dưới
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutCubic,
+                      left: 0,
+                      right: 0,
+                      bottom: isOpen ? 0 : -500, // Ẩn xuống dưới khi đóng
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          16,
+                          0,
+                          16,
+                          navBarHeight + 12,
+                        ),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF282828),
+                            borderRadius: BorderRadius.all(Radius.circular(24)),
+                          ),
+                          child: SafeArea(
+                            top: false,
+                            bottom: false,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 24,
+                                horizontal: 16,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _OptionTile(
+                                    icon: Icons.music_note_outlined,
+                                    title: 'Danh sách phát',
+                                    subtitle:
+                                        'Tạo danh sách phát gồm các bài hát hoặc tập podcast',
+                                    onTap: () =>
+                                        PlayerService().setModalOpen(false),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _OptionTile(
+                                    icon: Icons.group_outlined,
+                                    title: 'Danh sách phát cộng tác',
+                                    subtitle: 'Cùng bạn bè tạo danh sách phát',
+                                    onTap: () =>
+                                        PlayerService().setModalOpen(false),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _OptionTile(
+                                    icon: Icons.all_inclusive,
+                                    title: 'Giai điệu chung',
+                                    subtitle:
+                                        'Tạo danh sách phát tổng hợp gu nhạc của bạn bè',
+                                    onTap: () =>
+                                        PlayerService().setModalOpen(false),
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
         ),
         bottomNavigationBar: _SpotifyBottomNavigationBar(
           currentIndex: tab,
           onTap: (i) {
             if (i == 4) {
-              _openCreateSheet(context);
+              _toggleCreateSheet();
             } else {
+              // Nếu đang mở menu mà bấm tab khác thì đóng menu
+              if (PlayerService().isModalOpen) {
+                PlayerService().setModalOpen(false);
+              }
               setState(() => tab = i);
             }
           },
@@ -306,6 +346,106 @@ class _SpotifyShellState extends State<SpotifyShell> {
         ],
       ),
     );
+  }
+}
+
+class _GlobalPlayerOverlay extends StatefulWidget {
+  const _GlobalPlayerOverlay();
+
+  @override
+  State<_GlobalPlayerOverlay> createState() => _GlobalPlayerOverlayState();
+}
+
+class _GlobalPlayerOverlayState extends State<_GlobalPlayerOverlay> {
+  bool _isExpanded = true; // Mặc định mở lên là full
+
+  @override
+  Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    // Chiều cao của BottomNavigationBar + Safe area
+    // Để mini player nằm ngay trên bottom bar
+    final double bottomNavHeight = kBottomNavigationBarHeight + bottomPadding;
+    const double miniPlayerHeight = 60.0;
+
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        PlayerService(),
+        _playerRouteObserver.showBottomNav,
+      ]),
+      builder: (context, _) {
+        final service = PlayerService();
+        if (!service.showPlayer || service.currentSongId == null) {
+          return const SizedBox.shrink();
+        }
+
+        // Tính toán vị trí
+        // Nếu expanded: top = 0, height = screenHeight
+        // Nếu mini: top = screenHeight - bottomNavHeight - miniPlayerHeight
+
+        final bool showBottomNav = _playerRouteObserver.showBottomNav.value;
+        final bool isModalOpen = service.isModalOpen;
+
+        double opacity = 1.0;
+        if ((!_isExpanded && !showBottomNav) || isModalOpen) {
+          opacity = 0.0;
+        }
+
+        double top;
+        if (_isExpanded && !isModalOpen) {
+          top = 0;
+        } else {
+          top = screenHeight - bottomNavHeight - miniPlayerHeight;
+        }
+
+        final double height = _isExpanded ? screenHeight : miniPlayerHeight;
+
+        return AnimatedPositioned(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          top: top,
+          left: 0,
+          right: 0,
+          height: height,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 300),
+            opacity: opacity,
+            child: IgnorePointer(
+              ignoring: opacity == 0,
+              child: Material(
+                color: Colors.transparent,
+                child: SongDetailScreen(
+                  songId: service.currentSongId!,
+                  isMini: !_isExpanded,
+                  onMiniTap: () => setState(() => _isExpanded = true),
+                  onMinimize: () => setState(() => _isExpanded = false),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class PlayerRouteObserver extends NavigatorObserver {
+  final ValueNotifier<bool> showBottomNav = ValueNotifier(true);
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    if (route is PageRoute) {
+      showBottomNav.value = route.isFirst;
+    }
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPop(route, previousRoute);
+    if (previousRoute is PageRoute) {
+      showBottomNav.value = previousRoute.isFirst;
+    }
   }
 }
 
@@ -504,44 +644,67 @@ class _SpotifyBottomNavigationBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
   const _SpotifyBottomNavigationBar({
+    super.key,
     required this.currentIndex,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      currentIndex: currentIndex,
-      onTap: onTap,
-      selectedItemColor: Colors.white,
-      unselectedItemColor: const Color(0xFF8E8E93),
-      selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-      unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home_filled),
-          label: 'Trang chủ',
-        ),
-        BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Tiềm kiếm'),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.library_music_outlined),
-          activeIcon: Icon(Icons.library_music),
-          label: 'Thu viện',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(FontAwesomeIcons.spotify),
-          activeIcon: Icon(FontAwesomeIcons.spotify),
-          label: 'Premium',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(FontAwesomeIcons.plus),
-          label: 'Tạo',
-        ),
-      ],
+    return ListenableBuilder(
+      listenable: PlayerService(),
+      builder: (context, _) {
+        final isModalOpen = PlayerService().isModalOpen;
+        return BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          currentIndex: currentIndex,
+          onTap: onTap,
+          selectedItemColor: Colors.white,
+          unselectedItemColor: const Color(0xFF8E8E93),
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
+          items: [
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home_filled),
+              label: 'Trang chủ',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.search),
+              label: 'Tiềm kiếm',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.library_music_outlined),
+              activeIcon: Icon(Icons.library_music),
+              label: 'Thu viện',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(FontAwesomeIcons.spotify),
+              activeIcon: Icon(FontAwesomeIcons.spotify),
+              label: 'Premium',
+            ),
+            BottomNavigationBarItem(
+              icon: isModalOpen
+                  ? Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(6),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.black,
+                        size: 20,
+                      ),
+                    )
+                  : const Icon(FontAwesomeIcons.plus),
+              label: 'Tạo',
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -550,10 +713,12 @@ class _OptionTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
   const _OptionTile({
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   @override
@@ -562,18 +727,12 @@ class _OptionTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          Navigator.pop(context);
-        },
+        onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: const Color(0xFF3A3A3A),
-                child: Icon(icon, color: Colors.white),
-              ),
+              Icon(icon, color: const Color(0xFFB3B3B3), size: 32),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
