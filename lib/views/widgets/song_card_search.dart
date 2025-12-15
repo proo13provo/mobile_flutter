@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:spotife/views/screens/songdetail_screen.dart';
 
 class SongCardSearch extends StatelessWidget {
+  final String songId;
   final String title;
   final String? subtitle;
   final String imageUrl;
@@ -8,6 +10,7 @@ class SongCardSearch extends StatelessWidget {
 
   const SongCardSearch({
     super.key,
+    required this.songId,
     required this.title,
     required this.imageUrl,
     this.subtitle,
@@ -18,7 +21,14 @@ class SongCardSearch extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(10),
-      onTap: onTap,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SongDetailScreen(songId: songId),
+          ),
+        );
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(

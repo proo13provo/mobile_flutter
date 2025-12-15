@@ -176,10 +176,7 @@ class _SpotifyShellState extends State<SpotifyShell> {
         avatarUrl: avatarUrl,
         avatarLetter: letter,
       ),
-      _SearchPage(
-        avatarUrl: avatarUrl,
-        avatarLetter: letter,
-      ),
+      _SearchPage(avatarUrl: avatarUrl, avatarLetter: letter),
       const _LibraryPage(),
       const _PremiumPage(),
     ];
@@ -188,9 +185,9 @@ class _SpotifyShellState extends State<SpotifyShell> {
   String get _displayName {
     final name = (_user?.username ?? '').trim();
     if (name.isNotEmpty) return name;
-    final email = (_user?.email ?? '').trim();
-    if (email.isNotEmpty) return email;
-    return '';
+    // final email = (_user?.email ?? '').trim();
+    // if (email.isNotEmpty) return email;
+    return 'NoName';
   }
 
   String get _avatarLetter {
@@ -205,8 +202,9 @@ class _SpotifyShellState extends State<SpotifyShell> {
   Future<void> _loadUserProfile() async {
     try {
       final token = await _storage.getAccessToken();
-      final authorization =
-          token != null && token.isNotEmpty ? 'Bearer $token' : null;
+      final authorization = token != null && token.isNotEmpty
+          ? 'Bearer $token'
+          : null;
 
       final resp = await _apiUserService.fetchProfile(
         authorization: authorization,
@@ -612,11 +610,7 @@ class _UserAvatar extends StatelessWidget {
   final String? imageUrl;
   final String fallbackLetter;
   final double size;
-  const _UserAvatar({
-    this.imageUrl,
-    this.fallbackLetter = 'S',
-    this.size = 40,
-  });
+  const _UserAvatar({this.imageUrl, this.fallbackLetter = 'S', this.size = 40});
 
   @override
   Widget build(BuildContext context) {
@@ -632,10 +626,7 @@ class _UserAvatar extends StatelessWidget {
         color: const Color(0xFFFF8DBB),
         shape: BoxShape.circle,
         image: hasImage
-            ? DecorationImage(
-                image: NetworkImage(imageUrl!),
-                fit: BoxFit.cover,
-              )
+            ? DecorationImage(image: NetworkImage(imageUrl!), fit: BoxFit.cover)
             : null,
       ),
       child: hasImage
@@ -704,10 +695,7 @@ class _SearchPage extends StatelessWidget {
       children: [
         Row(
           children: [
-            _UserAvatar(
-              imageUrl: avatarUrl,
-              fallbackLetter: avatarLetter,
-            ),
+            _UserAvatar(imageUrl: avatarUrl, fallbackLetter: avatarLetter),
             const SizedBox(width: 12),
             const Text(
               'Tìm kiếm',

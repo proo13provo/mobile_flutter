@@ -1,25 +1,22 @@
-// import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:spotife/core/constants/api_constants.dart';
+import 'package:spotife/models/song_detail_response.dart';
 
-// import '../secure_storage_service.dart';
-// import 'api_client.dart';
+class SongService {
+  final Dio _dio = Dio();
 
-// class SongService {
-//   final ApiClient _apiClient;
-//   final SecureStorageService _secureStorageService;
+  Future<SongDetailResponse?> fetchSongDetail(String songId) async {
+    try {
+      final url = '${ApiConstants.baseUrl}/api/open/songs/$songId';
+      final response = await _dio.get(url);
 
-//   SongService(this._apiClient, this._secureStorageService);
-
-//   Future<List<dynamic>> fetchSongs() async {
-//     final token = await _secureStorageService.readToken();
-//     final response = await _apiClient.get(
-//       '/songs',
-//       headers: {'Authorization': 'Bearer $token'},
-//     );
-
-//     if (response.statusCode == 200) {
-//       return jsonDecode(response.body) as List<dynamic>;
-//     } else {
-//       throw Exception('Failed to load songs');
-//     }
-//   }
-// }
+      if (response.statusCode == 200 && response.data != null) {
+        return SongDetailResponse.fromJson(response.data);
+      }
+    } catch (e) {
+      // Handle error (log it or rethrow)
+      print('Error fetching song detail: $e');
+    }
+    return null;
+  }
+}

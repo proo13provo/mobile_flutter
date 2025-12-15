@@ -107,11 +107,7 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.search,
-                    color: Color(0xFFBDBDBD),
-                    size: 22,
-                  ),
+                  const Icon(Icons.search, color: Color(0xFFBDBDBD), size: 22),
                   const SizedBox(width: 10),
                   Expanded(
                     child: TextField(
@@ -138,8 +134,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   if (_query.isNotEmpty)
                     IconButton(
-                      icon:
-                          const Icon(Icons.close, color: Color(0xFFBDBDBD)),
+                      icon: const Icon(Icons.close, color: Color(0xFFBDBDBD)),
                       padding: EdgeInsets.zero,
                       onPressed: () {
                         _controller.clear();
@@ -184,7 +179,8 @@ class _SearchScreenState extends State<SearchScreen> {
       return _MessageState(text: _error!);
     }
 
-    final hasAny = _results.songs.isNotEmpty ||
+    final hasAny =
+        _results.songs.isNotEmpty ||
         _results.albums.isNotEmpty ||
         _results.artists.isNotEmpty;
     if (!hasAny) {
@@ -196,6 +192,7 @@ class _SearchScreenState extends State<SearchScreen> {
         const _SectionTitle(label: 'Nhạc'),
         ..._results.songs.map(
           (song) => SongCardSearch(
+            songId: song.id.toString(),
             title: song.title,
             subtitle: song.author ?? song.username ?? '',
             imageUrl: song.imageUrl,
@@ -217,10 +214,8 @@ class _SearchScreenState extends State<SearchScreen> {
       if (_results.artists.isNotEmpty) ...[
         const _SectionTitle(label: 'Nghệ sĩ'),
         ..._results.artists.map(
-          (artist) => ArtistCardSearch(
-            name: artist.name,
-            imageUrl: artist.imageUrl,
-          ),
+          (artist) =>
+              ArtistCardSearch(name: artist.name, imageUrl: artist.imageUrl),
         ),
       ],
       const SizedBox(height: 80),
@@ -257,10 +252,7 @@ class _EmptySearchState extends StatelessWidget {
             Text(
               'Tìm kiếm nghệ sĩ, bài hát, podcast, v.v.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 15,
-              ),
+              style: TextStyle(color: Colors.white70, fontSize: 15),
             ),
           ],
         ),
