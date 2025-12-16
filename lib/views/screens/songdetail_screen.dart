@@ -1,6 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:spotife/models/song_detail_response.dart';
 import 'package:spotife/service/api/song_service.dart';
+import 'package:spotife/service/player_service.dart';
 import 'package:video_player/video_player.dart';
 
 class SongDetailScreen extends StatefulWidget {
@@ -345,7 +347,9 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
                           color: Colors.white,
                           size: 36,
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          PlayerService().previous();
+                        },
                       ),
                       if (_videoController != null)
                         ValueListenableBuilder(
@@ -376,7 +380,9 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
                           color: Colors.white,
                           size: 36,
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          PlayerService().next();
+                        },
                       ),
                       IconButton(
                         icon: const Icon(Icons.repeat, color: Colors.white),
@@ -400,85 +406,96 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
 
     return GestureDetector(
       onTap: widget.onMiniTap,
-      child: Container(
-        color: const Color(0xFF282828), // Màu nền mini player
-        height: 60,
-        child: Stack(
-          children: [
-            // Giữ VideoPlayer kích thước 1x1 để duy trì kết nối buffer,
-            // giúp nhạc không bị ngắt và tránh lỗi "Unable to acquire a buffer item".
-            if (_videoController != null &&
-                _videoController!.value.isInitialized)
-              SizedBox(
-                width: 1,
-                height: 1,
-                child: VideoPlayer(_videoController!),
-              ),
-            Row(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            color: const Color(
+              0xFF282828,
+            ).withOpacity(0.8), // Màu nền bán trong suốt
+            height: 60,
+            child: Stack(
               children: [
-                // Video/Image nhỏ
-                if (song != null && song.imageUrl.isNotEmpty)
+                // Giữ VideoPlayer kích thước 1x1 để duy trì kết nối buffer,
+                // giúp nhạc không bị ngắt và tránh lỗi "Unable to acquire a buffer item".
+                if (_videoController != null &&
+                    _videoController!.value.isInitialized)
                   SizedBox(
-                    width: 60,
-                    height: 60,
-                    child: Image.network(song.imageUrl, fit: BoxFit.cover),
-                  )
-                else
-                  Container(
-                    width: 60,
-                    height: 60,
-                    color: Colors.grey[800],
-                    child: const Icon(Icons.music_note, color: Colors.white),
+                    width: 1,
+                    height: 1,
+                    child: VideoPlayer(_videoController!),
                   ),
-                const SizedBox(width: 12),
-                // Title
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        song?.title ?? 'Loading...',
-                        style: TextStyle(
-                          color: primary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        artist?.username ?? '',
-                        style: TextStyle(color: secondary, fontSize: 12),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                // Play/Pause Button
-                if (_videoController != null)
-                  ValueListenableBuilder(
-                    valueListenable: _videoController!,
-                    builder: (context, value, child) {
-                      return IconButton(
-                        icon: Icon(
-                          value.isPlaying ? Icons.pause : Icons.play_arrow,
+                Row(
+                  children: [
+                    // Video/Image nhỏ
+                    if (song != null && song.imageUrl.isNotEmpty)
+                      SizedBox(
+                        width: 60,
+                        height: 60,
+                        child: Image.network(song.imageUrl, fit: BoxFit.cover),
+                      )
+                    else
+                      Container(
+                        width: 60,
+                        height: 60,
+                        color: Colors.grey[800],
+                        child: const Icon(
+                          Icons.music_note,
                           color: Colors.white,
                         ),
-                        onPressed: () {
-                          if (value.isPlaying) {
-                            _videoController?.pause();
-                          } else {
-                            _videoController?.play();
-                          }
+                      ),
+                    const SizedBox(width: 12),
+                    // Title
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            song?.title ?? 'Loading...',
+                            style: TextStyle(
+                              color: primary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            artist?.username ?? '',
+                            style: TextStyle(color: secondary, fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Play/Pause Button
+                    if (_videoController != null)
+                      ValueListenableBuilder(
+                        valueListenable: _videoController!,
+                        builder: (context, value, child) {
+                          return IconButton(
+                            icon: Icon(
+                              value.isPlaying ? Icons.pause : Icons.play_arrow,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              if (value.isPlaying) {
+                                _videoController?.pause();
+                              } else {
+                                _videoController?.play();
+                              }
+                            },
+                          );
                         },
-                      );
-                    },
-                  ),
+                      ),
+                  ],
+                ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
