@@ -63,6 +63,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
           await _videoController!.initialize();
           _videoController!.play();
           _videoController!.setLooping(true); // Lặp lại video nếu muốn
+          _songService.listenSong(widget.songId); // Ghi nhận lượt nghe
           setState(() {});
         }
       }

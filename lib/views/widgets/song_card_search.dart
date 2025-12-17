@@ -7,6 +7,7 @@ class SongCardSearch extends StatelessWidget {
   final String? subtitle;
   final String imageUrl;
   final VoidCallback? onTap;
+  final VoidCallback? onCardTap;
 
   const SongCardSearch({
     super.key,
@@ -15,16 +16,19 @@ class SongCardSearch extends StatelessWidget {
     required this.imageUrl,
     this.subtitle,
     this.onTap,
+    this.onCardTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(10),
-      onTap: () {
-        // Gọi service để phát nhạc toàn cục
-        PlayerService().setSong(songId);
-      },
+      onTap:
+          onCardTap ??
+          () {
+            // Gọi service để phát nhạc toàn cục
+            PlayerService().setSong(songId);
+          },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(

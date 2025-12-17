@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:spotife/models/user_response.dart';
 import 'package:spotife/routes/app_routes.dart';
@@ -658,54 +659,61 @@ class _SpotifyBottomNavigationBar extends StatelessWidget {
       listenable: PlayerService(),
       builder: (context, _) {
         final isModalOpen = PlayerService().isModalOpen;
-        return BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          currentIndex: currentIndex,
-          onTap: onTap,
-          selectedItemColor: Colors.white,
-          unselectedItemColor: const Color(0xFF8E8E93),
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-          items: [
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home_filled),
-              label: 'Trang chủ',
+        return ClipRRect(
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.black.withOpacity(0.6),
+              elevation: 0,
+              currentIndex: currentIndex,
+              onTap: onTap,
+              selectedItemColor: Colors.white,
+              unselectedItemColor: const Color(0xFF8E8E93),
+              selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w500,
+              ),
+              items: [
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined),
+                  activeIcon: Icon(Icons.home_filled),
+                  label: 'Trang chủ',
+                ),
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.search),
+                  label: 'Tiềm kiếm',
+                ),
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.library_music_outlined),
+                  activeIcon: Icon(Icons.library_music),
+                  label: 'Thu viện',
+                ),
+                const BottomNavigationBarItem(
+                  icon: Icon(FontAwesomeIcons.spotify),
+                  activeIcon: Icon(FontAwesomeIcons.spotify),
+                  label: 'Premium',
+                ),
+                BottomNavigationBarItem(
+                  icon: isModalOpen
+                      ? Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          padding: const EdgeInsets.all(6),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.black,
+                            size: 20,
+                          ),
+                        )
+                      : const Icon(FontAwesomeIcons.plus),
+                  label: 'Tạo',
+                ),
+              ],
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.search),
-              label: 'Tiềm kiếm',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.library_music_outlined),
-              activeIcon: Icon(Icons.library_music),
-              label: 'Thu viện',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(FontAwesomeIcons.spotify),
-              activeIcon: Icon(FontAwesomeIcons.spotify),
-              label: 'Premium',
-            ),
-            BottomNavigationBarItem(
-              icon: isModalOpen
-                  ? Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      padding: const EdgeInsets.all(6),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.black,
-                        size: 20,
-                      ),
-                    )
-                  : const Icon(FontAwesomeIcons.plus),
-              label: 'Tạo',
-            ),
-          ],
+          ),
         );
       },
     );

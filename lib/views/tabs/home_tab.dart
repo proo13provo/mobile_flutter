@@ -3,6 +3,7 @@ import 'package:spotife/models/song_response.dart';
 import 'package:spotife/service/api/song_service.dart';
 import 'package:spotife/service/player_service.dart';
 import 'package:spotife/views/widgets/song_card.dart';
+import 'package:spotife/views/widgets/song_card_search.dart';
 
 class HomeTab extends StatefulWidget {
   final String displayName;
@@ -23,25 +24,30 @@ class HomeTab extends StatefulWidget {
 class _HomeTabState extends State<HomeTab> {
   final _songService = SongService();
   List<SongResponse> _trendingSongs = [];
+  List<SongResponse> _recentSongs = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchTrending();
+    _fetchData();
   }
 
-  Future<void> _fetchTrending() async {
+  Future<void> _fetchData() async {
     try {
-      final songs = await _songService.fetchTrendingSongs();
+      final results = await Future.wait([
+        _songService.fetchTrendingSongs(),
+        _songService.fetchListeningHistory(),
+      ]);
       if (mounted) {
         setState(() {
-          _trendingSongs = songs;
+          _trendingSongs = results[0];
+          _recentSongs = results[1];
           _isLoading = false;
         });
       }
     } catch (e) {
-      debugPrint('Error fetching trending: $e');
+      debugPrint('Error fetching home data: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -63,7 +69,7 @@ class _HomeTabState extends State<HomeTab> {
         children: [
           // 2. Nội dung chính
           RefreshIndicator(
-            onRefresh: _fetchTrending,
+            onRefresh: _fetchData,
             color: const Color(0xFF1DB954),
             backgroundColor: const Color(0xFF282828),
             child: ListView(
@@ -93,17 +99,27 @@ class _HomeTabState extends State<HomeTab> {
 
                 const SizedBox(height: 24),
 
+                // Section: Nghe gần đây (Mới)
+                if (!_isLoading && _recentSongs.isNotEmpty) ...[
+                  _buildSectionHeader('Nghe gần đây'),
+                  const SizedBox(height: 16),
+                  _buildRecentlyPlayedList(),
+                  const SizedBox(height: 24),
+                ],
+
                 // Section: Thịnh hành
                 _buildSectionHeader('Thịnh hành'),
                 const SizedBox(height: 16),
-                _buildHorizontalList(),
+                _buildHorizontalList(_trendingSongs),
 
                 const SizedBox(height: 24),
 
                 // Section: Gợi ý (Dùng lại data demo)
                 _buildSectionHeader('Gợi ý cho bạn'),
                 const SizedBox(height: 16),
-                _buildHorizontalList(),
+                _buildHorizontalList(
+                  _trendingSongs,
+                ), // Tạm thời dùng trending làm gợi ý
               ],
             ),
           ),
@@ -137,7 +153,7 @@ class _HomeTabState extends State<HomeTab> {
 
   Widget _buildQuickAccessTile(SongResponse song) {
     return GestureDetector(
-      onTap: () => _playSong(song),
+      onTap: () => _playSong(song, _trendingSongs),
       child: Container(
         height: 56,
         decoration: BoxDecoration(
@@ -196,7 +212,7 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildHorizontalList() {
+  Widget _buildHorizontalList(List<SongResponse> songs) {
     if (_isLoading) {
       return const SizedBox(
         height: 200,
@@ -205,7 +221,7 @@ class _HomeTabState extends State<HomeTab> {
         ),
       );
     }
-    if (_trendingSongs.isEmpty) {
+    if (songs.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(horizontal: 16),
         child: Text(
@@ -219,19 +235,41 @@ class _HomeTabState extends State<HomeTab> {
       child: ListView.builder(
         padding: const EdgeInsets.only(left: 16),
         scrollDirection: Axis.horizontal,
-        itemCount: _trendingSongs.length,
+        itemCount: songs.length,
         itemBuilder: (context, index) {
-          final song = _trendingSongs[index];
-          return SongCard(song: song, onTap: () => _playSong(song));
+          final song = songs[index];
+          return SongCard(song: song, onTap: () => _playSong(song, songs));
         },
       ),
     );
   }
 
-  void _playSong(SongResponse song) {
+  Widget _buildRecentlyPlayedList() {
+    // Lấy 4 bài gần nhất
+    final songs = _recentSongs.take(4).toList();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: songs
+            .map(
+              (song) => SongCardSearch(
+                songId: song.id.toString(),
+                title: song.title,
+                imageUrl: song.imageUrl,
+                onCardTap: () => _playSong(song, _recentSongs),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+
+  void _playSong(SongResponse song, List<SongResponse> contextList) {
     final player = PlayerService();
-    final songIds = _trendingSongs.map((s) => s.id.toString()).toList();
-    final index = _trendingSongs.indexOf(song);
+    // Sử dụng danh sách ngữ cảnh (contextList) để tạo hàng đợi phát nhạc
+    // Điều này giúp khi bấm vào bài ở mục "Gần đây" thì next bài sẽ là bài tiếp theo trong "Gần đây"
+    final songIds = contextList.map((s) => s.id.toString()).toList();
+    final index = contextList.indexOf(song);
     if (index != -1) {
       player.setQueue(songIds, index);
     }

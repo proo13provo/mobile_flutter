@@ -19,17 +19,21 @@ class AuthService {
   }
 
   AuthService._(this._apiClient, SecureStorageService storage)
-      : _storage = storage {
+    : _storage = storage {
     _attachAuthInterceptor();
   }
 
-  static final AuthService _instance =
-      AuthService._(ApiClient(), SecureStorageService());
+  static final AuthService _instance = AuthService._(
+    ApiClient(),
+    SecureStorageService(),
+  );
 
   static const Duration _expiryGracePeriod = Duration(seconds: 30);
 
   final ApiClient _apiClient;
   final SecureStorageService _storage;
+
+  ApiClient get apiClient => _apiClient;
 
   String? _cachedAccessToken;
   DateTime? _cachedExpiry;
@@ -349,12 +353,17 @@ class AuthService {
       if (payload is Map<String, dynamic>) {
         final expValue = payload['exp'];
         if (expValue is int) {
-          return DateTime.fromMillisecondsSinceEpoch(expValue * 1000, isUtc: true)
-              .toLocal();
+          return DateTime.fromMillisecondsSinceEpoch(
+            expValue * 1000,
+            isUtc: true,
+          ).toLocal();
         }
         if (expValue is num) {
           final millis = (expValue * 1000).toInt();
-          return DateTime.fromMillisecondsSinceEpoch(millis, isUtc: true).toLocal();
+          return DateTime.fromMillisecondsSinceEpoch(
+            millis,
+            isUtc: true,
+          ).toLocal();
         }
       }
     } catch (_) {
