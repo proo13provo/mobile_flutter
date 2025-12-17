@@ -62,7 +62,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
           );
           await _videoController!.initialize();
           _videoController!.play();
-          _videoController!.setLooping(true); // Lặp lại video nếu muốn
+          _videoController!.addListener(_onSongFinished);
           _songService.listenSong(widget.songId); // Ghi nhận lượt nghe
           setState(() {});
         }
@@ -74,6 +74,17 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
           context,
         ).showSnackBar(SnackBar(content: Text('Error loading song: $e')));
       }
+    }
+  }
+
+  void _onSongFinished() {
+    if (_videoController == null) return;
+    final value = _videoController!.value;
+    if (value.isInitialized &&
+        value.duration > Duration.zero &&
+        value.position >= value.duration) {
+      _videoController!.removeListener(_onSongFinished);
+      PlayerService().next();
     }
   }
 

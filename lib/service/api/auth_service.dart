@@ -282,7 +282,7 @@ class AuthService {
     }
   }
 
-  Future<String?> _getValidAccessToken() async {
+  Future<String?> getAccessToken() async {
     if (_cachedAccessToken == null || _cachedAccessToken!.isEmpty) {
       final stored = await _storage.getAccessToken();
       if (stored == null || stored.isEmpty) {
@@ -384,7 +384,7 @@ class AuthService {
           }
 
           try {
-            final token = await _getValidAccessToken();
+            final token = await getAccessToken();
             if (token != null && token.isNotEmpty) {
               options.headers['Authorization'] = 'Bearer $token';
             }

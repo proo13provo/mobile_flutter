@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:spotife/service/api/auth_service.dart';
 
 import '../../models/search_response.dart';
 import '../../models/user_response.dart';
@@ -7,7 +8,7 @@ import 'api_client.dart';
 /// Provides typed calls for user profile and search endpoints.
 class ApiUserService {
   ApiUserService({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient();
+    : _apiClient = apiClient ?? AuthService().apiClient;
 
   final ApiClient _apiClient;
 
@@ -38,9 +39,16 @@ class ApiUserService {
     }
 
     try {
+      // Lấy token hợp lệ (đã refresh nếu cần) từ AuthService
+      final token = await AuthService().getAccessToken();
+      final options = token != null && token.isNotEmpty
+          ? Options(headers: {'Authorization': 'Bearer $token'})
+          : null;
+
       final resp = await _apiClient.get(
         '/api/search',
         queryParameters: {'keyword': trimmed},
+        options: options,
       );
       final results = SearchResponse.fromJson(_asMap(resp.data));
       return (ok: resp.statusCode == 200, results: results);
