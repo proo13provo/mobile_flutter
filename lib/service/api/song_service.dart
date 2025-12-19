@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:spotife/models/song_detail_response.dart';
 import 'package:spotife/models/song_response.dart';
@@ -40,6 +39,25 @@ class SongService {
       }
     } catch (e) {
       debugPrint('Error fetching trending songs: $e');
+    }
+    return [];
+  }
+
+  // Lấy danh sách bài hát được đề xuất cho người dùng
+  Future<List<SongResponse>> fetchRecommendedSongs() async {
+    try {
+      final response = await _apiClient.get('/api/user/songs/recommended');
+
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        if (data['content'] is List) {
+          return (data['content'] as List)
+              .map((e) => SongResponse.fromJson(e))
+              .toList();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching recommended songs: $e');
     }
     return [];
   }

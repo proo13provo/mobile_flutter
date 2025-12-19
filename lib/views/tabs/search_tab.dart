@@ -166,7 +166,7 @@ const _browseItems = [
   _BrowseItem(
     'Podcasts',
     Color(0xFF006C5B),
-    'https://images.unsplash.com/photo-1582719478248-51f2e51b2cf5?auto=format&fit=crop&w=600&q=80',
+    'https://plus.unsplash.com/premium_photo-1684407617295-b9324ba41413?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
   ),
   _BrowseItem(
     'Sự kiện trực tiếp',

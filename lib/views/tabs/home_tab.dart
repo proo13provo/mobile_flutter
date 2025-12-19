@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:spotife/models/artist_response.dart';
 import 'package:spotife/models/song_response.dart';
 import 'package:spotife/service/api/song_service.dart';
 import 'package:spotife/service/player_service.dart';
 import 'package:spotife/views/widgets/song_card.dart';
 import 'package:spotife/views/widgets/song_card_search.dart';
+import '../../service/api/artist_service.dart';
 
 class HomeTab extends StatefulWidget {
   final String displayName;
@@ -23,8 +25,11 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> {
   final _songService = SongService();
+  final _artistService = ArtistService();
   List<SongResponse> _trendingSongs = [];
   List<SongResponse> _recentSongs = [];
+  List<ArtistResponse> _recommendedArtists = [];
+  List<SongResponse> _recommendedSongs = [];
   bool _isLoading = true;
 
   @override
@@ -38,11 +43,16 @@ class _HomeTabState extends State<HomeTab> {
       final results = await Future.wait([
         _songService.fetchTrendingSongs(),
         _songService.fetchListeningHistory(),
+        _artistService.fetchArtistSongs(0),
+        _songService.fetchRecommendedSongs(),
+        // Giả sử 0 là ID người dùng hiện tại
       ]);
       if (mounted) {
         setState(() {
-          _trendingSongs = results[0];
-          _recentSongs = results[1];
+          _trendingSongs = results[0] as List<SongResponse>;
+          _recentSongs = results[1] as List<SongResponse>;
+          _recommendedArtists = results[2] as List<ArtistResponse>;
+          _recommendedSongs = results[3] as List<SongResponse>;
           _isLoading = false;
         });
       }
@@ -112,14 +122,17 @@ class _HomeTabState extends State<HomeTab> {
                 const SizedBox(height: 16),
                 _buildHorizontalList(_trendingSongs),
 
+                // Section: Gợi ý cho bạn
+                if (!_isLoading && _recentSongs.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  _buildSectionHeader('Gợi ý cho bạn'),
+                  const SizedBox(height: 16),
+                  _buildHorizontalList(_trendingSongs),
+                ],
                 const SizedBox(height: 24),
-
-                // Section: Gợi ý (Dùng lại data demo)
-                _buildSectionHeader('Gợi ý cho bạn'),
+                _buildSectionHeader('Nghệ sĩ được đề xuất'),
                 const SizedBox(height: 16),
-                _buildHorizontalList(
-                  _trendingSongs,
-                ), // Tạm thời dùng trending làm gợi ý
+                _buildArtistList(_recommendedArtists),
               ],
             ),
           ),
@@ -255,11 +268,96 @@ class _HomeTabState extends State<HomeTab> {
               (song) => SongCardSearch(
                 songId: song.id.toString(),
                 title: song.title,
+                subtitle: song.author ?? song.username ?? '',
                 imageUrl: song.imageUrl,
                 onCardTap: () => _playSong(song, _recentSongs),
               ),
             )
             .toList(),
+      ),
+    );
+  }
+
+  Widget _buildArtistList(List<ArtistResponse> artists) {
+    if (_isLoading) {
+      return const SizedBox(
+        height: 180,
+        child: Center(
+          child: CircularProgressIndicator(color: Color(0xFF1DB954)),
+        ),
+      );
+    }
+    if (artists.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Text(
+          'Không có nghệ sĩ nào.',
+          style: TextStyle(color: Colors.white54),
+        ),
+      );
+    }
+    return SizedBox(
+      height: 200, // Tăng chiều cao để chứa subtitle
+      child: ListView.builder(
+        padding: const EdgeInsets.only(left: 16),
+        scrollDirection: Axis.horizontal,
+        itemCount: artists.length,
+        itemBuilder: (context, index) {
+          final artist = artists[index];
+          return InkWell(
+            onTap: () {
+              // TODO: Điều hướng đến trang chi tiết nghệ sĩ
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 140, // Tăng chiều rộng thẻ
+              margin: const EdgeInsets.only(right: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(
+                      70,
+                    ), // Bán kính = width / 2
+                    child: Image.network(
+                      artist.imageUrl,
+                      width: 140,
+                      height: 140,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 140,
+                        height: 140,
+                        color: Colors.grey[800],
+                        child: const Icon(
+                          Icons.person,
+                          color: Colors.white54,
+                          size: 60,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    artist.username,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold, // In đậm hơn
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Nghệ sĩ',
+                    style: TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

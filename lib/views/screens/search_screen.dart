@@ -214,8 +214,10 @@ class _SearchScreenState extends State<SearchScreen> {
       if (_results.artists.isNotEmpty) ...[
         const _SectionTitle(label: 'Nghệ sĩ'),
         ..._results.artists.map(
-          (artist) =>
-              ArtistCardSearch(name: artist.name, imageUrl: artist.imageUrl),
+          (artist) => ArtistCardSearch(
+            name: artist.username,
+            imageUrl: artist.imageUrl,
+          ),
         ),
       ],
       const SizedBox(height: 80),
