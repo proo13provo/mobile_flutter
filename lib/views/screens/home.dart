@@ -48,7 +48,7 @@ class _SpotifyShellState extends State<SpotifyShell> {
   int filterIndex = 0;
   final filters = const ['Tất cả', 'Nhạc', 'Podcast'];
   bool showCreatePopup = false;
-  double _horizontalDrag = 0;
+  bool _homeFullScreen = false;
 
   UserResponse? _user;
 
@@ -96,26 +96,6 @@ class _SpotifyShellState extends State<SpotifyShell> {
     );
   }
 
-  void _handleHorizontalDragStart(DragStartDetails details) {
-    _horizontalDrag = 0;
-  }
-
-  void _handleHorizontalDragUpdate(DragUpdateDetails details) {
-    if (details.delta.dx > 0) {
-      _horizontalDrag += details.delta.dx;
-    } else {
-      _horizontalDrag = 0;
-    }
-  }
-
-  void _handleHorizontalDragEnd(DragEndDetails details, BuildContext context) {
-    final velocity = details.primaryVelocity ?? 0;
-    if (_horizontalDrag >= 80 || velocity > 600) {
-      _openQuickMenuPanel(context);
-    }
-    _horizontalDrag = 0;
-  }
-
   List<Widget> _buildPages() {
     final avatarUrl = _user?.urlAvatar;
     final letter = _avatarLetter;
@@ -124,6 +104,11 @@ class _SpotifyShellState extends State<SpotifyShell> {
         displayName: _displayName,
         avatarUrl: avatarUrl,
         avatarLetter: letter,
+        onFullScreenToggle: (isFullScreen) {
+          if (_homeFullScreen != isFullScreen) {
+            setState(() => _homeFullScreen = isFullScreen);
+          }
+        },
       ),
       SearchTab(avatarUrl: avatarUrl, avatarLetter: letter),
       const LibraryTab(),
@@ -173,134 +158,131 @@ class _SpotifyShellState extends State<SpotifyShell> {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final navBarHeight = kBottomNavigationBarHeight + bottomPadding;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onHorizontalDragStart: _handleHorizontalDragStart,
-      onHorizontalDragUpdate: _handleHorizontalDragUpdate,
-      onHorizontalDragEnd: (details) =>
-          _handleHorizontalDragEnd(details, context),
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        extendBody: true,
-        body: Stack(
-          children: [
-            SafeArea(
-              child: Column(
-                children: [
-                  _buildTopBar(),
-                  const SizedBox(height: 4),
-                  Expanded(
-                    child: IndexedStack(index: tab, children: pages),
-                  ),
-                ],
-              ),
+    return Scaffold(
+      backgroundColor: Colors.black,
+      extendBody: true,
+      body: Stack(
+        children: [
+          SafeArea(
+            top: !(tab == 0 && _homeFullScreen),
+            child: Column(
+              children: [
+                _buildTopBar(),
+                if (!(tab == 0 && _homeFullScreen)) const SizedBox(height: 4),
+                Expanded(
+                  child: IndexedStack(index: tab, children: pages),
+                ),
+              ],
             ),
-            ListenableBuilder(
-              listenable: PlayerService(),
-              builder: (context, _) {
-                final isOpen = PlayerService().isModalOpen;
-                return Stack(
-                  children: [
-                    // Lớp phủ mờ (Barrier) - Bấm vào để đóng
-                    IgnorePointer(
-                      ignoring: !isOpen,
-                      child: AnimatedOpacity(
-                        duration: const Duration(milliseconds: 200),
-                        opacity: isOpen ? 1.0 : 0.0,
-                        child: GestureDetector(
-                          onTap: () => PlayerService().setModalOpen(false),
-                          child: Container(color: Colors.black54),
-                        ),
+          ),
+          ListenableBuilder(
+            listenable: PlayerService(),
+            builder: (context, _) {
+              final isOpen = PlayerService().isModalOpen;
+              return Stack(
+                children: [
+                  // Lớp phủ mờ (Barrier) - Bấm vào để đóng
+                  IgnorePointer(
+                    ignoring: !isOpen,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      opacity: isOpen ? 1.0 : 0.0,
+                      child: GestureDetector(
+                        onTap: () => PlayerService().setModalOpen(false),
+                        child: Container(color: Colors.black54),
                       ),
                     ),
-                    // Menu trượt lên từ dưới
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeOutCubic,
-                      left: 0,
-                      right: 0,
-                      bottom: isOpen ? 0 : -500, // Ẩn xuống dưới khi đóng
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          16,
-                          0,
-                          16,
-                          navBarHeight + 12,
+                  ),
+                  // Menu trượt lên từ dưới
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOutCubic,
+                    left: 0,
+                    right: 0,
+                    bottom: isOpen ? 0 : -500, // Ẩn xuống dưới khi đóng
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        16,
+                        0,
+                        16,
+                        navBarHeight + 12,
+                      ),
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF282828),
+                          borderRadius: BorderRadius.all(Radius.circular(24)),
                         ),
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF282828),
-                            borderRadius: BorderRadius.all(Radius.circular(24)),
-                          ),
-                          child: SafeArea(
-                            top: false,
-                            bottom: false,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 24,
-                                horizontal: 16,
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _OptionTile(
-                                    icon: Icons.music_note_outlined,
-                                    title: 'Danh sách phát',
-                                    subtitle:
-                                        'Tạo danh sách phát gồm các bài hát hoặc tập podcast',
-                                    onTap: () =>
-                                        PlayerService().setModalOpen(false),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  _OptionTile(
-                                    icon: Icons.group_outlined,
-                                    title: 'Danh sách phát cộng tác',
-                                    subtitle: 'Cùng bạn bè tạo danh sách phát',
-                                    onTap: () =>
-                                        PlayerService().setModalOpen(false),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  _OptionTile(
-                                    icon: Icons.all_inclusive,
-                                    title: 'Giai điệu chung',
-                                    subtitle:
-                                        'Tạo danh sách phát tổng hợp gu nhạc của bạn bè',
-                                    onTap: () =>
-                                        PlayerService().setModalOpen(false),
-                                  ),
-                                  const SizedBox(height: 16),
-                                ],
-                              ),
+                        child: SafeArea(
+                          top: false,
+                          bottom: false,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 24,
+                              horizontal: 16,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _OptionTile(
+                                  icon: Icons.music_note_outlined,
+                                  title: 'Danh sách phát',
+                                  subtitle:
+                                      'Tạo danh sách phát gồm các bài hát hoặc tập podcast',
+                                  onTap: () =>
+                                      PlayerService().setModalOpen(false),
+                                ),
+                                const SizedBox(height: 16),
+                                _OptionTile(
+                                  icon: Icons.group_outlined,
+                                  title: 'Danh sách phát cộng tác',
+                                  subtitle: 'Cùng bạn bè tạo danh sách phát',
+                                  onTap: () =>
+                                      PlayerService().setModalOpen(false),
+                                ),
+                                const SizedBox(height: 16),
+                                _OptionTile(
+                                  icon: Icons.all_inclusive,
+                                  title: 'Giai điệu chung',
+                                  subtitle:
+                                      'Tạo danh sách phát tổng hợp gu nhạc của bạn bè',
+                                  onTap: () =>
+                                      PlayerService().setModalOpen(false),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
-        bottomNavigationBar: _SpotifyBottomNavigationBar(
-          currentIndex: tab,
-          onTap: (i) {
-            if (i == 4) {
-              _toggleCreateSheet();
-            } else {
-              // Nếu đang mở menu mà bấm tab khác thì đóng menu
-              if (PlayerService().isModalOpen) {
-                PlayerService().setModalOpen(false);
-              }
-              setState(() => tab = i);
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+      bottomNavigationBar: _SpotifyBottomNavigationBar(
+        currentIndex: tab,
+        onTap: (i) {
+          if (i == 4) {
+            _toggleCreateSheet();
+          } else {
+            // Nếu đang mở menu mà bấm tab khác thì đóng menu
+            if (PlayerService().isModalOpen) {
+              PlayerService().setModalOpen(false);
             }
-          },
-        ),
+            setState(() => tab = i);
+          }
+        },
       ),
     );
   }
 
   Widget _buildTopBar() {
+    if (tab == 0 && _homeFullScreen) {
+      return const SizedBox.shrink();
+    }
     if (tab == 1 || tab == 3) {
       return const SizedBox(height: 8);
     }
@@ -309,9 +291,12 @@ class _SpotifyShellState extends State<SpotifyShell> {
       child: Row(
         children: [
           if (tab != 3)
-            UserAvatar(
-              imageUrl: _user?.urlAvatar,
-              fallbackLetter: _avatarLetter,
+            GestureDetector(
+              onTap: () => _openQuickMenuPanel(context),
+              child: UserAvatar(
+                imageUrl: _user?.urlAvatar,
+                fallbackLetter: _avatarLetter,
+              ),
             ),
           const SizedBox(width: 12),
           if (tab == 0)

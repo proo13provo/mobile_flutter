@@ -13,7 +13,8 @@ class AlbumResponse {
     return AlbumResponse(
       id: (json['id'] as num?)?.toInt() ?? 0,
       title: json['title'] as String? ?? json['name'] as String? ?? '',
-      imageUrl: json['imageUrl'] as String? ?? '',
+      imageUrl:
+          json['coverUrl'] as String? ?? json['coverUrl'] as String? ?? '',
     );
   }
 

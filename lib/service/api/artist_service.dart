@@ -6,7 +6,7 @@ class ArtistService {
   final ApiClient _apiClient;
   ArtistService({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
 
-  Future<List<ArtistResponse>> fetchArtistSongs(int artistId) async {
+  Future<List<ArtistResponse>> fetchArtistSongs() async {
     try {
       final response = await _apiClient.get('/api/open/artist/trending');
 

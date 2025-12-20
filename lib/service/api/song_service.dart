@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:spotife/models/song_detail_response.dart';
 import 'package:spotife/models/song_response.dart';
@@ -88,6 +89,28 @@ class SongService {
       }
     } catch (e) {
       debugPrint('Error fetching listening history: $e');
+    }
+    return [];
+  }
+
+  Future<List<SongResponse>> fetchArtistSongs(int artistId) async {
+    try {
+      final response = await _apiClient.get('/api/open/$artistId/full');
+
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        if (data['songs'] is List) {
+          return (data['songs'] as List).map((e) {
+            final map = Map<String, dynamic>.from(e);
+            if (map['id'] is String) {
+              map['id'] = int.tryParse(map['id']) ?? 0;
+            }
+            return SongResponse.fromJson(map);
+          }).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching artist songs: $e');
     }
     return [];
   }

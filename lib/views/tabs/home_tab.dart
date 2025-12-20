@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:spotife/models/album_response.dart';
 import 'package:spotife/models/artist_response.dart';
 import 'package:spotife/models/song_response.dart';
+import 'package:spotife/service/api/albums_service.dart';
 import 'package:spotife/service/api/song_service.dart';
 import 'package:spotife/service/player_service.dart';
 import 'package:spotife/views/widgets/song_card.dart';
 import 'package:spotife/views/widgets/song_card_search.dart';
 import '../../service/api/artist_service.dart';
+import 'package:spotife/views/screens/playlist_screen.dart';
 
 class HomeTab extends StatefulWidget {
   final String displayName;
   final String? avatarUrl;
   final String avatarLetter;
+  final ValueChanged<bool>? onFullScreenToggle;
 
   const HomeTab({
     super.key,
     required this.displayName,
     this.avatarUrl,
     required this.avatarLetter,
+    this.onFullScreenToggle,
   });
 
   @override
@@ -26,11 +31,14 @@ class HomeTab extends StatefulWidget {
 class _HomeTabState extends State<HomeTab> {
   final _songService = SongService();
   final _artistService = ArtistService();
+  final _albumsService = AlbumService();
   List<SongResponse> _trendingSongs = [];
   List<SongResponse> _recentSongs = [];
   List<ArtistResponse> _recommendedArtists = [];
   List<SongResponse> _recommendedSongs = [];
+  List<AlbumResponse> _recommendedAlbums = [];
   bool _isLoading = true;
+  Map<String, dynamic>? _selectedPlaylist;
 
   @override
   void initState() {
@@ -43,8 +51,10 @@ class _HomeTabState extends State<HomeTab> {
       final results = await Future.wait([
         _songService.fetchTrendingSongs(),
         _songService.fetchListeningHistory(),
-        _artistService.fetchArtistSongs(0),
+        _artistService.fetchArtistSongs(), // Giả sử 0 là ID người dùng hiện tại
         _songService.fetchRecommendedSongs(),
+        _albumsService.fetchAlbums(),
+
         // Giả sử 0 là ID người dùng hiện tại
       ]);
       if (mounted) {
@@ -53,6 +63,7 @@ class _HomeTabState extends State<HomeTab> {
           _recentSongs = results[1] as List<SongResponse>;
           _recommendedArtists = results[2] as List<ArtistResponse>;
           _recommendedSongs = results[3] as List<SongResponse>;
+          _recommendedAlbums = results[4] as List<AlbumResponse>;
           _isLoading = false;
         });
       }
@@ -73,6 +84,26 @@ class _HomeTabState extends State<HomeTab> {
 
   @override
   Widget build(BuildContext context) {
+    if (_selectedPlaylist != null) {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          setState(() => _selectedPlaylist = null);
+          widget.onFullScreenToggle?.call(false);
+        },
+        child: PlaylistTab(
+          title: _selectedPlaylist!['title'],
+          imageUrl: _selectedPlaylist!['imageUrl'],
+          type: _selectedPlaylist!['type'],
+          songs: _selectedPlaylist!['songs'] as List<SongResponse>,
+          onBack: () {
+            setState(() => _selectedPlaylist = null);
+            widget.onFullScreenToggle?.call(false);
+          },
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -127,12 +158,17 @@ class _HomeTabState extends State<HomeTab> {
                   const SizedBox(height: 24),
                   _buildSectionHeader('Gợi ý cho bạn'),
                   const SizedBox(height: 16),
-                  _buildHorizontalList(_trendingSongs),
+                  _buildHorizontalList(_recommendedSongs),
                 ],
                 const SizedBox(height: 24),
                 _buildSectionHeader('Nghệ sĩ được đề xuất'),
                 const SizedBox(height: 16),
                 _buildArtistList(_recommendedArtists),
+
+                const SizedBox(height: 24),
+                _buildSectionHeader('Album được đề xuất'),
+                const SizedBox(height: 16),
+                _buildAlbumList(_recommendedAlbums),
               ],
             ),
           ),
@@ -305,8 +341,33 @@ class _HomeTabState extends State<HomeTab> {
         itemBuilder: (context, index) {
           final artist = artists[index];
           return InkWell(
-            onTap: () {
-              // TODO: Điều hướng đến trang chi tiết nghệ sĩ
+            onTap: () async {
+              try {
+                final songs = await _songService.fetchArtistSongs(artist.id);
+                if (!mounted) return;
+
+                if (songs.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Không tìm thấy bài hát nào của nghệ sĩ này',
+                      ),
+                    ),
+                  );
+                }
+
+                setState(() {
+                  _selectedPlaylist = {
+                    'title': artist.username,
+                    'imageUrl': artist.imageUrl,
+                    'type': 'Artist',
+                    'songs': songs,
+                  };
+                });
+                widget.onFullScreenToggle?.call(true);
+              } catch (e) {
+                debugPrint('Lỗi khi tải bài hát nghệ sĩ: $e');
+              }
             },
             borderRadius: BorderRadius.circular(8),
             child: Container(
@@ -352,6 +413,125 @@ class _HomeTabState extends State<HomeTab> {
                   const Text(
                     'Nghệ sĩ',
                     style: TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildAlbumList(List<AlbumResponse> albums) {
+    if (_isLoading) {
+      return const SizedBox(
+        height: 200,
+        child: Center(
+          child: CircularProgressIndicator(color: Color(0xFF1DB954)),
+        ),
+      );
+    }
+    if (albums.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Text(
+          'Không có album nào.',
+          style: TextStyle(color: Colors.white54),
+        ),
+      );
+    }
+    return SizedBox(
+      height: 240,
+      child: ListView.builder(
+        padding: const EdgeInsets.only(left: 16),
+        scrollDirection: Axis.horizontal,
+        itemCount: albums.length,
+        itemBuilder: (context, index) {
+          final album = albums[index];
+          return GestureDetector(
+            onTap: () async {
+              try {
+                final songs = await _albumsService.fetchAlbumSongs(album.id);
+                if (!mounted) return;
+
+                if (songs.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Album này chưa có bài hát nào'),
+                    ),
+                  );
+                }
+
+                setState(() {
+                  _selectedPlaylist = {
+                    'title': album.title,
+                    'imageUrl': album.imageUrl,
+                    'type': 'Album',
+                    'songs': songs,
+                  };
+                });
+                widget.onFullScreenToggle?.call(true);
+              } catch (e) {
+                debugPrint('Lỗi khi tải bài hát album: $e');
+              }
+            },
+            child: Container(
+              width: 150,
+              margin: const EdgeInsets.only(right: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: Image.network(
+                          album.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: Colors.grey[850],
+                            child: const Icon(
+                              Icons.album,
+                              color: Colors.white24,
+                              size: 50,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    album.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Album',
+                    style: TextStyle(
+                      color: Color(0xFFB3B3B3),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
