@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:spotife/models/album_response.dart';
 import 'package:spotife/models/song_response.dart';

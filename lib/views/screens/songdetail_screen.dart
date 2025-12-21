@@ -33,6 +33,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
   @override
   void initState() {
     super.initState();
+    PlayerService().addListener(_onPlayerStateChange);
     _initSong();
   }
 
@@ -43,6 +44,18 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
       _videoController?.dispose();
       _videoController = null;
       _initSong();
+    }
+  }
+
+  void _onPlayerStateChange() {
+    if (_videoController != null && _videoController!.value.isInitialized) {
+      final isServicePlaying = PlayerService().isPlaying;
+      final isVideoPlaying = _videoController!.value.isPlaying;
+      if (isServicePlaying && !isVideoPlaying) {
+        _videoController!.play();
+      } else if (!isServicePlaying && isVideoPlaying) {
+        _videoController!.pause();
+      }
     }
   }
 
@@ -61,7 +74,11 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
             Uri.parse(data.song.mediaUrl),
           );
           await _videoController!.initialize();
-          _videoController!.play();
+          if (PlayerService().isPlaying) {
+            _videoController!.play();
+          } else {
+            _videoController!.pause();
+          }
           _videoController!.addListener(_onSongFinished);
           _songService.listenSong(widget.songId); // Ghi nhận lượt nghe
           setState(() {});
@@ -90,6 +107,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
 
   @override
   void dispose() {
+    PlayerService().removeListener(_onPlayerStateChange);
     _videoController?.dispose();
     super.dispose();
   }
@@ -379,8 +397,10 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
                               onPressed: () {
                                 if (isPlaying) {
                                   _videoController?.pause();
+                                  PlayerService().pause();
                                 } else {
                                   _videoController?.play();
+                                  PlayerService().play();
                                 }
                               },
                             );
@@ -496,8 +516,10 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
                             onPressed: () {
                               if (value.isPlaying) {
                                 _videoController?.pause();
+                                PlayerService().pause();
                               } else {
                                 _videoController?.play();
+                                PlayerService().play();
                               }
                             },
                           );

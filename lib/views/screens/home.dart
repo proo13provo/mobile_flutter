@@ -10,6 +10,7 @@ import 'package:spotife/service/secure_storage_service.dart';
 import 'package:spotife/views/screens/songdetail_screen.dart';
 import 'package:spotife/views/tabs/home_tab.dart';
 import 'package:spotife/views/tabs/library_tab.dart';
+import 'package:spotife/views/screens/create_playlist_screen.dart';
 import 'package:spotife/views/tabs/premium_tab.dart';
 import 'package:spotife/views/tabs/search_tab.dart';
 import 'package:spotife/views/widgets/user_avatar.dart';
@@ -228,8 +229,40 @@ class _SpotifyShellState extends State<SpotifyShell> {
                                   title: 'Danh sách phát',
                                   subtitle:
                                       'Tạo danh sách phát gồm các bài hát hoặc tập podcast',
-                                  onTap: () =>
-                                      PlayerService().setModalOpen(false),
+                                  onTap: () {
+                                    PlayerService().setModalOpen(false);
+                                    Navigator.of(context).push(
+                                      PageRouteBuilder(
+                                        pageBuilder:
+                                            (
+                                              context,
+                                              animation,
+                                              secondaryAnimation,
+                                            ) => const CreatePlaylistScreen(),
+                                        transitionsBuilder:
+                                            (
+                                              context,
+                                              animation,
+                                              secondaryAnimation,
+                                              child,
+                                            ) {
+                                              const begin = Offset(0.0, 1.0);
+                                              const end = Offset.zero;
+                                              const curve = Curves.easeOutCubic;
+                                              var tween = Tween(
+                                                begin: begin,
+                                                end: end,
+                                              ).chain(CurveTween(curve: curve));
+                                              return SlideTransition(
+                                                position: animation.drive(
+                                                  tween,
+                                                ),
+                                                child: child,
+                                              );
+                                            },
+                                      ),
+                                    );
+                                  },
                                 ),
                                 const SizedBox(height: 16),
                                 _OptionTile(
@@ -347,8 +380,6 @@ class _GlobalPlayerOverlay extends StatefulWidget {
 }
 
 class _GlobalPlayerOverlayState extends State<_GlobalPlayerOverlay> {
-  bool _isExpanded = true; // Mặc định mở lên là full
-
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -375,20 +406,21 @@ class _GlobalPlayerOverlayState extends State<_GlobalPlayerOverlay> {
 
         final bool showBottomNav = _playerRouteObserver.showBottomNav.value;
         final bool isModalOpen = service.isModalOpen;
+        final bool isExpanded = service.isExpanded;
 
         double opacity = 1.0;
-        if ((!_isExpanded && !showBottomNav) || isModalOpen) {
+        if ((!isExpanded && !showBottomNav) || isModalOpen) {
           opacity = 0.0;
         }
 
         double top;
-        if (_isExpanded && !isModalOpen) {
+        if (isExpanded && !isModalOpen) {
           top = 0;
         } else {
           top = screenHeight - bottomNavHeight - miniPlayerHeight;
         }
 
-        final double height = _isExpanded ? screenHeight : miniPlayerHeight;
+        final double height = isExpanded ? screenHeight : miniPlayerHeight;
 
         return AnimatedPositioned(
           duration: const Duration(milliseconds: 300),
@@ -406,9 +438,9 @@ class _GlobalPlayerOverlayState extends State<_GlobalPlayerOverlay> {
                 color: Colors.transparent,
                 child: SongDetailScreen(
                   songId: service.currentSongId!,
-                  isMini: !_isExpanded,
-                  onMiniTap: () => setState(() => _isExpanded = true),
-                  onMinimize: () => setState(() => _isExpanded = false),
+                  isMini: !isExpanded,
+                  onMiniTap: () => service.setExpanded(true),
+                  onMinimize: () => service.setExpanded(false),
                 ),
               ),
             ),
