@@ -7,6 +7,10 @@ workflows:
       flutter: stable
       xcode: latest
 
+    ios_signing:
+      distribution_type: development   # hoặc app_store
+      bundle_identifier: com.yourcompany.mobileflutter
+
     triggering:
       events:
         - push
@@ -24,3 +28,4 @@ workflows:
     artifacts:
       - build/ios/ipa/*.ipa
       - build/ios/archive/*.xcarchive
+
