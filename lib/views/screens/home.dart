@@ -112,7 +112,11 @@ class _SpotifyShellState extends State<SpotifyShell> {
         },
       ),
       SearchTab(avatarUrl: avatarUrl, avatarLetter: letter),
-      const LibraryTab(),
+      LibraryTab(
+        avatarUrl: avatarUrl,
+        avatarLetter: letter,
+        onAvatarTap: () => _openQuickMenuPanel(context),
+      ),
       const PremiumTab(),
     ];
   }
@@ -316,7 +320,7 @@ class _SpotifyShellState extends State<SpotifyShell> {
     if (tab == 0 && _homeFullScreen) {
       return const SizedBox.shrink();
     }
-    if (tab == 1 || tab == 3) {
+    if (tab == 1 || tab == 2 || tab == 3) {
       return const SizedBox(height: 8);
     }
     return Padding(

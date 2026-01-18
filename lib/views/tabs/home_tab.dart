@@ -93,6 +93,7 @@ class _HomeTabState extends State<HomeTab> {
           widget.onFullScreenToggle?.call(false);
         },
         child: PlaylistTab(
+          id: _selectedPlaylist!['id'] as int? ?? 0,
           title: _selectedPlaylist!['title'],
           imageUrl: _selectedPlaylist!['imageUrl'],
           type: _selectedPlaylist!['type'],
@@ -154,7 +155,7 @@ class _HomeTabState extends State<HomeTab> {
                 _buildHorizontalList(_trendingSongs),
 
                 // Section: Gợi ý cho bạn
-                if (!_isLoading && _recentSongs.isNotEmpty) ...[
+                if (!_isLoading && _recommendedSongs.isNotEmpty) ...[
                   const SizedBox(height: 24),
                   _buildSectionHeader('Gợi ý cho bạn'),
                   const SizedBox(height: 16),
@@ -358,6 +359,7 @@ class _HomeTabState extends State<HomeTab> {
 
                 setState(() {
                   _selectedPlaylist = {
+                    'id': artist.id,
                     'title': artist.username,
                     'imageUrl': artist.imageUrl,
                     'type': 'Artist',
@@ -465,6 +467,7 @@ class _HomeTabState extends State<HomeTab> {
 
                 setState(() {
                   _selectedPlaylist = {
+                    'id': album.id,
                     'title': album.title,
                     'imageUrl': album.imageUrl,
                     'type': 'Album',

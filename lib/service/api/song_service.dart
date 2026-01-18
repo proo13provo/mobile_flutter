@@ -32,9 +32,13 @@ class SongService {
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data;
         if (data['content'] is List) {
-          return (data['content'] as List)
-              .map((e) => SongResponse.fromJson(e))
-              .toList();
+          return (data['content'] as List).map((e) {
+            final map = Map<String, dynamic>.from(e);
+            if (map['id'] is String) {
+              map['id'] = int.tryParse(map['id']) ?? 0;
+            }
+            return SongResponse.fromJson(map);
+          }).toList();
         }
       }
     } catch (e) {
@@ -46,14 +50,22 @@ class SongService {
   // Lấy danh sách bài hát được đề xuất cho người dùng
   Future<List<SongResponse>> fetchRecommendedSongs() async {
     try {
-      final response = await _apiClient.get('/api/user/songs/recommended');
+      final response = await _apiClient.get('/api/user/recommend/songs');
 
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data;
         if (data['content'] is List) {
-          return (data['content'] as List)
-              .map((e) => SongResponse.fromJson(e))
-              .toList();
+          return (data['content'] as List).map((e) {
+            final map = Map<String, dynamic>.from(e);
+            if (map['id'] is String) {
+              map['id'] = int.tryParse(map['id']) ?? 0;
+            }
+            // Xử lý thêm artistId để tránh lỗi parse nếu API trả về String
+            if (map['artistId'] is String) {
+              map['artistId'] = int.tryParse(map['artistId']);
+            }
+            return SongResponse.fromJson(map);
+          }).toList();
         }
       }
     } catch (e) {
@@ -103,6 +115,9 @@ class SongService {
             final map = Map<String, dynamic>.from(e);
             if (map['id'] is String) {
               map['id'] = int.tryParse(map['id']) ?? 0;
+            }
+            if (map['artistId'] is String) {
+              map['artistId'] = int.tryParse(map['artistId']);
             }
             return SongResponse.fromJson(map);
           }).toList();

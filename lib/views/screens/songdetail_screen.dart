@@ -1,9 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:spotife/models/song_detail_response.dart';
+import 'package:spotife/service/api/api_user.dart';
 import 'package:spotife/service/api/song_service.dart';
 import 'package:spotife/service/player_service.dart';
 import 'package:video_player/video_player.dart';
+import 'package:spotife/views/widgets/add_to_playlist_sheet.dart';
 
 class SongDetailScreen extends StatefulWidget {
   final String songId;
@@ -25,10 +27,12 @@ class SongDetailScreen extends StatefulWidget {
 
 class _SongDetailScreenState extends State<SongDetailScreen> {
   final SongService _songService = SongService();
+  final ApiUserService _apiUserService = ApiUserService();
   VideoPlayerController? _videoController;
 
   bool _isLoading = true;
   SongDetailResponse? _songDetail;
+  bool _isLiked = false;
 
   @override
   void initState() {
@@ -103,6 +107,25 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
       _videoController!.removeListener(_onSongFinished);
       PlayerService().next();
     }
+  }
+
+  Future<void> _toggleLike() async {
+    setState(() => _isLiked = !_isLiked);
+    try {
+      final sId = int.tryParse(widget.songId);
+      if (sId == null) return;
+
+      bool success;
+      if (_isLiked) {
+        success = await _apiUserService.follow(sId, 'Song');
+      } else {
+        success = await _apiUserService.unfollow(sId, 'Song');
+      }
+
+      if (!success && mounted) {
+        setState(() => _isLiked = !_isLiked);
+      }
+    } catch (_) {}
   }
 
   @override
@@ -192,7 +215,13 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
           actions: [
             IconButton(
               icon: const Icon(Icons.more_vert, color: Colors.white),
-              onPressed: () {},
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) =>
+                      AddToPlaylistSheet(songId: widget.songId),
+                );
+              },
             ),
           ],
         ),
@@ -280,12 +309,14 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(
-                          Icons.favorite_border,
-                          color: Colors.white,
+                        icon: Icon(
+                          _isLiked ? Icons.favorite : Icons.favorite_border,
+                          color: _isLiked
+                              ? const Color(0xFF1DB954)
+                              : Colors.white,
                           size: 28,
                         ),
-                        onPressed: () {},
+                        onPressed: _toggleLike,
                       ),
                     ],
                   ),

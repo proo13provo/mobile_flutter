@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:spotife/service/api/playlist_service.dart';
 
 class CreatePlaylistScreen extends StatefulWidget {
-  const CreatePlaylistScreen({super.key});
+  final int? songId;
+  const CreatePlaylistScreen({super.key, this.songId});
 
   @override
   State<CreatePlaylistScreen> createState() => _CreatePlaylistScreenState();
@@ -105,11 +106,11 @@ class _CreatePlaylistScreenState extends State<CreatePlaylistScreen> {
                     onPressed: _isActive
                         ? () async {
                             final title = _controller.text.trim();
-                            final success = await _playlistservice
-                                .createPlaylist(title);
+                            final result = await _playlistservice
+                                .createPlaylist(title, songId: widget.songId);
                             if (!context.mounted) return;
-                            if (success) {
-                              Navigator.pop(context, title);
+                            if (result != null) {
+                              Navigator.pop(context, result);
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(

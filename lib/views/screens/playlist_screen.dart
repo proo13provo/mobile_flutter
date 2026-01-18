@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:spotife/models/song_response.dart';
+import 'package:spotife/service/api/api_user.dart';
 import 'package:spotife/service/player_service.dart';
 import 'package:spotife/views/widgets/song_card_search.dart';
 
 class PlaylistTab extends StatefulWidget {
+  final int id;
   final String title;
   final String imageUrl;
   final String? description;
@@ -14,6 +16,7 @@ class PlaylistTab extends StatefulWidget {
 
   const PlaylistTab({
     super.key,
+    required this.id,
     required this.title,
     required this.imageUrl,
     this.description,
@@ -32,11 +35,49 @@ class _PlaylistTabState extends State<PlaylistTab> {
   // Giả lập màu chủ đạo (thực tế có thể dùng thư viện palette_generator để lấy từ ảnh)
   final Color _dominantColor = const Color(0xFF483830);
   bool _showAllSongs = false;
+  bool _isFollowed = false;
+  final ApiUserService _apiUserService = ApiUserService();
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    _checkFollowStatus();
+  }
+
+  Future<void> _checkFollowStatus() async {
+    if (widget.type == 'Artist') {
+      final artists = await _apiUserService.fetchFollowedArtists();
+      if (mounted) {
+        setState(() {
+          _isFollowed = artists.any((a) => a.id == widget.id);
+        });
+      }
+    } else if (widget.type == 'Album') {
+      final albums = await _apiUserService.fetchFollowedAlbums();
+      if (mounted) {
+        setState(() {
+          _isFollowed = albums.any((a) => a.id == widget.id);
+        });
+      }
+    }
+  }
+
+  Future<void> _toggleFollow() async {
+    setState(() => _isFollowed = !_isFollowed);
+    bool success;
+    if (_isFollowed) {
+      success = await _apiUserService.follow(widget.id, widget.type);
+    } else {
+      success = await _apiUserService.unfollow(widget.id, widget.type);
+    }
+
+    if (!success && mounted) {
+      setState(() => _isFollowed = !_isFollowed);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Thao tác thất bại')));
+    }
   }
 
   @override
@@ -179,10 +220,10 @@ class _PlaylistTabState extends State<PlaylistTab> {
             Row(
               children: [
                 IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.favorite_border,
-                    color: Colors.grey,
+                  onPressed: _toggleFollow,
+                  icon: Icon(
+                    _isFollowed ? Icons.favorite : Icons.favorite_border,
+                    color: _isFollowed ? const Color(0xFF1DB954) : Colors.white,
                     size: 28,
                   ),
                 ),
